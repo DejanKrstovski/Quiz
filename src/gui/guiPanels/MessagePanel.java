@@ -4,30 +4,48 @@ import javax.swing.BoxLayout;
 
 import gui.GuiConstants;
 import gui.guiSwing.MyTextField;
-import gui.guiSwing.SubPanel;
 
 /**
+ * A simple panel for displaying messages or status updates to the user.
+ * <p>
+ * It uses a non-editable text field to show messages such as errors,
+ * confirmations, or system feedback.
+ * </p>
+ * 
+ * Typically used in the bottom area of forms or dialogs.
+ * 
  * @author DejanKrstovski
- * This panel is the panel for the errors
  */
-public class MessagePanel extends SubPanel implements GuiConstants{
-	MyTextField messageArea;
+public class MessagePanel extends SubPanel implements GuiConstants {
 
-	public MessagePanel() {
-		super();
-		setLayout(new BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
-		setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		messageArea = new MyTextField();
-		messageArea.setEditable(false);
-		add(messageArea);
-	}	
-	
-	public MyTextField getMessageArea() {
-		return messageArea;
-	}
+    private MyTextField messageField;
 
-	public void setMessageAreaText(String message) {
-		this.messageArea.setText(message);;
-	}
+    /**
+     * Constructs a MessagePanel with a single-line text field for displaying messages.
+     */
+    public MessagePanel() {
+        setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+        setBorder(DISTANCE_BETWEEN_ELEMENTS);
+        messageField = new MyTextField();
+        messageField.setEditable(false);
+        add(messageField);
+    }
 
+    /**
+     * Returns the message text field component.
+     *
+     * @return the {@link MyTextField} used for displaying messages
+     */
+    public MyTextField getMessageArea() {
+        return messageField;
+    }
+
+    /**
+     * Sets the message text to be displayed in the message panel.
+     *
+     * @param message the message to display
+     */
+    public void setMessageAreaText(String message) {
+        this.messageField.setText(message);
+    }
 }

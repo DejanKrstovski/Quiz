@@ -15,9 +15,9 @@ import gui.guiPanels.ComboBoxJListPanel;
 import gui.guiPanels.LabelFieldPanel;
 import gui.guiPanels.LabelTextAreaPanel;
 import gui.guiPanels.SouthPanel;
+import gui.guiPanels.SubPanel;
 import gui.guiSwing.MyButton;
 import gui.guiSwing.MyLabel;
-import gui.guiSwing.SubPanel;
 import quizlogic.Answer;
 import quizlogic.FakeDataDeliverer;
 import quizlogic.Question;
@@ -49,7 +49,7 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 		this.fdd = fdd;
 		init();
 		initButtonActions();
-		fillWithData(fdd.getRandomQuestion());
+		fillWithData(fdd.getRandomQuestion(comboPanel.getSelectedTheme()));
 	}
 
 	/**
@@ -61,15 +61,18 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 	 */
 	private void fillWithData(Question q) {
 		if (q != null) {
-			themePanel.setText(q.getTheme().getInfoText());
+			themePanel.setText(q.getTheme().getTitle());
 			titlePanel.setText(q.getTitle());
 			questionPanel.setTextInfo(q.getText());
+
 			ArrayList<Answer> answers = q.getAnswers();
 			for (int i = 0; i < answers.size(); i++) {
 				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
+				answerPanel.getAnswerCheckBoxes(i).setSelected(false);
 			}
 		}
 	}
+
 
 	/**
 	 * This method sets the layout and initialize the Components
@@ -125,7 +128,7 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 	 * @return themePanel
 	 */
 	private SubPanel initThemePanel() {
-		themePanel = new LabelFieldPanel("Thema", "");
+		themePanel = new LabelFieldPanel(THEME, EMPTY_STRING);
 		themePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return themePanel;
 	}
@@ -137,7 +140,7 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 	 * @return titlePanel
 	 */
 	private SubPanel initTitlePanel() {
-		titlePanel = new LabelFieldPanel("Titel", "");
+		titlePanel = new LabelFieldPanel(TITLE, EMPTY_STRING);
 		titlePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return titlePanel;
 	}
@@ -148,7 +151,7 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 	 * @return QuestionPanel
 	 */
 	private SubPanel initQuestionPanel() {
-		questionPanel = new LabelTextAreaPanel("Frage");
+		questionPanel = new LabelTextAreaPanel(QUESTION);
 		questionPanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return questionPanel;
 	}
@@ -162,8 +165,8 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 		SubPanel p = new SubPanel();
 		p.setLayout(new BoxLayout(p, javax.swing.BoxLayout.LINE_AXIS));
 		p.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		MyLabel possibleAnwserLabel = new MyLabel("Mögliche Antwortwahl");
-		MyLabel rightAnswerLabel = new MyLabel("Richtig");
+		MyLabel possibleAnwserLabel = new MyLabel(POSSIBLE_ANSWERS);
+		MyLabel rightAnswerLabel = new MyLabel(CORRECTNESS);
 		p.add(possibleAnwserLabel);
 		p.add(Box.createHorizontalGlue());
 		p.add(rightAnswerLabel);
@@ -256,6 +259,6 @@ public class MainPlayPanel extends JPanel implements GuiConstants {
 	}
 
 	private void nextQuestion() {
-		fillWithData(fdd.getRandomQuestion());
+		fillWithData(fdd.getRandomQuestion(comboPanel.getSelectedTheme()));
 	}
 }

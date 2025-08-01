@@ -15,19 +15,23 @@ import gui.guiPanels.ComboBoxJListPanel;
 import gui.guiPanels.LabelFieldPanel;
 import gui.guiPanels.LabelTextAreaPanel;
 import gui.guiPanels.SouthPanel;
+import gui.guiPanels.SubPanel;
 import gui.guiSwing.MyButton;
 import gui.guiSwing.MyLabel;
-import gui.guiSwing.SubPanel;
 import quizlogic.Answer;
 import quizlogic.FakeDataDeliverer;
 import quizlogic.Question;
 import quizlogic.Theme;
 
 /**
- * @author DejanKrstovski
+ * The main panel responsible for creating, displaying, and managing questions
+ * related to a selected quiz theme. Users can create new questions, edit
+ * existing ones, or delete them.
  * 
- * This is the Question Panel. Here can be the questions for the <br>
- * specified  theme made or changed
+ * This panel contains input fields for question title, text, possible answers,
+ * and a list for theme-specific or global question selection.
+ *
+ * @author DejanKrstovski
  */
 public class MainQuestionPanel extends JPanel implements GuiConstants {
 
@@ -45,7 +49,9 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	private String info;
 
 	/**
-	 * Constructs the question panel and initialize the sub panels
+	 * Constructs the question panel and initializes all subcomponents.
+	 *
+	 * @param fdd the data deliverer providing themes and questions
 	 */
 	public MainQuestionPanel(FakeDataDeliverer fdd) {
 		super();
@@ -56,18 +62,17 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This method is used to simulate a chosen question and <br>
-	 * on the left side are filled all TextFields and possible answers <br>
-	 * and the paired true or false
-	 * 
-	 * @param q Question
+	 * Populates the input fields with data from the selected question, including
+	 * title, text, and answers with their correctness.
+	 *
+	 * @param q the question to load into the UI
 	 */
 	private void fillWithData(Question q) {
 		if (q != null) {
 			titlePanel.setText(q.getTitle());
 			questionPanel.setTextInfo(q.getText());
 			ArrayList<Answer> answers = q.getAnswers();
-			for (int i = 0; i < answers.size(); i++) {
+			for (int i = 0; i < Math.min(answers.size(), 4); i++) {
 				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
 				answerPanel.getAnswerCheckBoxes(i).setSelected(answers.get(i).isCorrect());
 			}
@@ -75,7 +80,7 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This method sets the layout and initialize the Components
+	 * Initializes layout and components of the main panel.
 	 */
 	private void init() {
 		initLayout();
@@ -84,15 +89,15 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * Sets the layout for the question panel
+	 * Sets the layout manager of the main panel to BorderLayout.
 	 */
 	private void initLayout() {
 		setLayout(new BorderLayout());
 	}
 
 	/**
-	 * Here are initialized the 3 sub panels and placed in the border layout
-	 * 
+	 * Initializes and adds all subpanels (west, center, and bottom) to the main
+	 * layout.
 	 */
 	private void initComponents() {
 		westPanel = initWestPanel();
@@ -104,9 +109,10 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This panel has the labels the TextFields and the possible answers
-	 * 
-	 * @return Sub panel
+	 * Creates the left subpanel that includes input fields for theme, title,
+	 * question text, and answers.
+	 *
+	 * @return the initialized west subpanel
 	 */
 	private SubPanel initWestPanel() {
 		SubPanel p = new SubPanel();
@@ -117,58 +123,57 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 		p.add(initTitlePanel());
 		p.add(initQuestionPanel());
 		p.add(initPossibleAnswerPanel());
-		p.add(initAnwserPanel());
+		p.add(initAnswerPanel());
 		p.setBorder(OUTSIDE_BORDERS);
 		return p;
 	}
 
 	/**
-	 * This is a sub panel for the theme label and the theme TextField
-	 * 
-	 * @return themePanel
+	 * Creates the subpanel for the theme label and text field.
+	 *
+	 * @return the initialized theme panel
 	 */
 	private SubPanel initThemePanel() {
-		themePanel = new LabelFieldPanel("Thema", "");
+		themePanel = new LabelFieldPanel(THEME, EMPTY_STRING);
 		themePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return themePanel;
 	}
 
 	/**
-	 * This is a sub panel for the title label and the title TextField for the
-	 * question
-	 * 
-	 * @return titlePanel
+	 * Creates the subpanel for entering the question title.
+	 *
+	 * @return the initialized title panel
 	 */
 	private SubPanel initTitlePanel() {
-		titlePanel = new LabelFieldPanel("Titel", "");
+		titlePanel = new LabelFieldPanel(TITLE, EMPTY_STRING);
 		titlePanel.getTextField().setEditable(true);
 		titlePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return titlePanel;
 	}
 
 	/**
-	 * This is a sub panel for the label and the TextArea for the question
-	 * 
-	 * @return QuestionPanel
+	 * Creates the subpanel for entering the main question text.
+	 *
+	 * @return the initialized question panel
 	 */
 	private SubPanel initQuestionPanel() {
-		questionPanel = new LabelTextAreaPanel("Frage");
+		questionPanel = new LabelTextAreaPanel(QUESTION);
 		questionPanel.getQuestionTextArea().setEditable(true);
 		questionPanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 		return questionPanel;
 	}
 
 	/**
-	 * This is a sub panel for the two labels
-	 * 
-	 * @return Sub panel
+	 * Creates a panel with labels for possible answers and their correctness.
+	 *
+	 * @return the initialized label panel
 	 */
 	private SubPanel initPossibleAnswerPanel() {
 		SubPanel p = new SubPanel();
 		p.setLayout(new BoxLayout(p, javax.swing.BoxLayout.LINE_AXIS));
 		p.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		MyLabel possibleAnwserLabel = new MyLabel("Mögliche Antwortwahl");
-		MyLabel rightAnswerLabel = new MyLabel("Richtig");
+		MyLabel possibleAnwserLabel = new MyLabel(POSSIBLE_ANSWERS);
+		MyLabel rightAnswerLabel = new MyLabel(CORRECTNESS);
 		p.add(possibleAnwserLabel);
 		p.add(Box.createHorizontalGlue());
 		p.add(rightAnswerLabel);
@@ -176,19 +181,20 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This is a sub panel for the possible Answers
-	 * 
-	 * @return AnswerPanel
+	 * Creates the panel used for entering multiple possible answers.
+	 *
+	 * @return the initialized answer panel
 	 */
-	private SubPanel initAnwserPanel() {
+	private SubPanel initAnswerPanel() {
 		answerPanel = new AnswerPanel();
 		return answerPanel;
 	}
 
 	/**
-	 * This is a right sub panel from the question Main panel
-	 * 
-	 * @return Sub panel
+	 * Creates the right subpanel with the theme label and a combo box list of
+	 * questions.
+	 *
+	 * @return the initialized center panel
 	 */
 	private SubPanel initCenterPanel() {
 		SubPanel p = new SubPanel();
@@ -200,19 +206,18 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This is a sub panel that has a label and a button that is set <br>
-	 * invisible. When the user chooses a theme than the button will <br>
-	 * be shown
-	 * 
-	 * @return Sub panel
+	 * Creates a panel with the theme label and a button to toggle theme info or
+	 * question list.
+	 *
+	 * @return the initialized theme label panel
 	 */
 	private SubPanel initThemaLabelPanel() {
 		SubPanel p = new SubPanel();
 		p.setLayout(new BoxLayout(p, javax.swing.BoxLayout.LINE_AXIS));
 		p.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		MyLabel questionLabel = new MyLabel("Frage zum Thema");
+		MyLabel questionLabel = new MyLabel(QUESTION_FOR_THEME);
 		p.add(questionLabel);
-		buttonShow = new MyButton("Thema anzeigen");
+		buttonShow = new MyButton(SHOW_THEME);
 		p.add(Box.createHorizontalGlue());
 		p.add(buttonShow);
 		buttonShow.setVisible(false);
@@ -220,17 +225,15 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 	}
 
 	/**
-	 * This is a panel for the ComboBox and the JList In the ComboBox are all themes
-	 * and in the JList can be seen all questions or the questions for the selected
-	 * theme
-	 * 
-	 * @return ComboBoxJListPanel
+	 * Creates and initializes the combo box (for themes) and JList (for questions).
+	 *
+	 * @return the initialized combo box/JList panel
 	 */
 	private SubPanel initComboPanel() {
 		List<String> themeTitles = fdd.getThemes().stream().map(Theme::getTitle).collect(Collectors.toList());
 
 		List<String> comboItems = new ArrayList<>();
-		comboItems.add("Alle Themen");
+		comboItems.add(ALL_THEMES);
 		comboItems.addAll(themeTitles);
 
 		List<String> listQuestions = new ArrayList<>(fdd.getAllQuestionTitle().values());
@@ -238,22 +241,30 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 		return comboPanel;
 	}
 
+	/**
+	 * Adds a listener to the combo box. Updates UI and visibility based on theme
+	 * selection.
+	 */
 	private void initComboBoxListener() {
 		comboPanel.addThemeSelectionListener(e -> {
 			String selectedTheme = (String) comboPanel.getSelectedTheme();
 			Theme t = (fdd.getThemeByTitle(selectedTheme));
 			if (!(t == null))
 				info = t.getInfoText();
-			if (selectedTheme != null && !selectedTheme.equals("Alle Themen")) {
-			    buttonShow.setVisible(true);
+			if (selectedTheme != null && !selectedTheme.equals(ALL_THEMES)) {
+				buttonShow.setVisible(true);
 			} else {
-			    buttonShow.setVisible(false);
+				buttonShow.setVisible(false);
 			}
 			themePanel.setText(selectedTheme);
 			updateQuestionsList(selectedTheme);
 		});
 	}
 
+	/**
+	 * Initializes all button listeners for saving, creating, deleting, and
+	 * displaying questions.
+	 */
 	private void initButtonActions() {
 		MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
 		buttons[0].addActionListener(e -> saveQuestion());
@@ -261,7 +272,11 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 		buttons[2].addActionListener(e -> deleteQuestion());
 		buttonShow.addActionListener(e -> showListOrInfo());
 	}
-	
+
+	/**
+	 * Initializes the question list listener to update the UI when a question is
+	 * selected from the list.
+	 */
 	public void initQuestionListListener() {
 		comboPanel.addQuestionSelectionListener(e -> {
 			if (!e.getValueIsAdjusting()) {
@@ -274,21 +289,44 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 		});
 	}
 
+	/**
+	 * Validates the input fields required to create or update a quiz question.
+	 * <p>
+	 * This method checks that the theme title, question title, and question text
+	 * are not empty, and that the provided theme exists in the data source. If a
+	 * validation check fails, an appropriate warning message is displayed in the
+	 * message panel.
+	 *
+	 * @param themeTitle the title of the theme to which the question belongs
+	 * @param title      the title of the question
+	 * @param text       the main text/content of the question
+	 * @return {@code true} if all inputs are valid and the theme exists;
+	 *         {@code false} otherwise
+	 */
+
+	private boolean validateQuestionInput(String themeTitle, String title, String text) {
+		if (themeTitle.isEmpty() || title.isEmpty() || text.isEmpty()) {
+			bottomPanel.getMessagePanel().setMessageAreaText(WARNING_ALL_FIELDS);
+			return false;
+		}
+		if (fdd.getThemeByTitle(themeTitle) == null) {
+			bottomPanel.getMessagePanel().setMessageAreaText(CHOOSE_A_THEME_MSG);
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Saves a new question or updates an existing one, depending on whether the
+	 * title already exists. Validates that all fields are filled in before saving.
+	 */
 	private void saveQuestion() {
 		String themeTitle = themePanel.getText();
 		String title = titlePanel.getText();
 		String questionText = questionPanel.getTextInfo();
-
-		if (themeTitle.isEmpty() || title.isEmpty() || questionText.isEmpty()) {
-			bottomPanel.getMessagePanel().setMessageAreaText("Bitte alle Felder ausfüllen!");
-			return;
-		}
-
 		Theme theme = fdd.getThemeByTitle(themeTitle);
-		if (theme == null) {
-			bottomPanel.getMessagePanel().setMessageAreaText("Thema nicht gefunden.");
+		if (!validateQuestionInput(themeTitle, title, questionText))
 			return;
-		}
 
 		ArrayList<Answer> answers = new ArrayList<>();
 		for (int i = 0; i < 4; i++) {
@@ -305,64 +343,88 @@ public class MainQuestionPanel extends JPanel implements GuiConstants {
 		if (fdd.getQuestionByTitle(title) == null) {
 			fdd.addQuestion(q);
 			updateQuestionsList(themeTitle);
-			bottomPanel.getMessagePanel().setMessageAreaText("Frage erfolgreich gespeichert.");
+			bottomPanel.getMessagePanel().setMessageAreaText(QUESTION_SAVED);
 		} else {
 			fdd.updateQuestion(q, theme);
 			updateQuestionsList(themeTitle);
-			bottomPanel.getMessagePanel().setMessageAreaText("Frage aktualisiert.");
+			bottomPanel.getMessagePanel().setMessageAreaText(QUESTION_UPDATED);
 		}
 	}
-	
+
+	/**
+	 * Clears all input fields to allow the user to enter a new question.
+	 */
 	private void newQuestion() {
-		themePanel.setText("");
-		titlePanel.setText("");
-		questionPanel.setTextInfo("");
+		themePanel.setText(EMPTY_STRING);
+		titlePanel.setText(EMPTY_STRING);
+		questionPanel.setTextInfo(EMPTY_STRING);
 
 		for (int i = 0; i < 4; i++) {
-			answerPanel.getAnswerFields(i).setText("");
+			answerPanel.getAnswerFields(i).setText(EMPTY_STRING);
 			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
 		}
 		comboPanel.getList().clearSelection();
 	}
 
+	/**
+	 * Deletes the selected question after user confirmation.
+	 */
 	private void deleteQuestion() {
 		String selectedTitle = comboPanel.getList().getSelectedValue();
 		if (selectedTitle == null) {
-			bottomPanel.getMessagePanel().setMessageAreaText("Bitte eine Frage auswählen.");
+			bottomPanel.getMessagePanel().setMessageAreaText(CHOOSE_A_QUESTION_MSG);
 			return;
 		}
-		int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "Möchten Sie diese Frage wirklich löschen?",
-				"Frage löschen", javax.swing.JOptionPane.YES_NO_OPTION);
+		int confirm = javax.swing.JOptionPane.showConfirmDialog(this, QUESTION_DELETE_INFORMATION, DELETE_CONFIRMATION,
+				javax.swing.JOptionPane.YES_NO_OPTION);
 		if (confirm == javax.swing.JOptionPane.YES_OPTION) {
 			fdd.deleteQuestionByTitle(selectedTitle);
 			refreshComboThemes();
 			newQuestion();
-			bottomPanel.getMessagePanel().setMessageAreaText("Frage gelöscht.");
+			bottomPanel.getMessagePanel().setMessageAreaText(QUESTION_DELETED);
 		}
 	}
 
+	/**
+	 * Updates the displayed list of questions based on the selected theme. If no
+	 * theme is selected or the theme has no questions, the list will be cleared.
+	 *
+	 * @param themeTitle the title of the theme to filter questions for
+	 */
 	private void updateQuestionsList(String themeTitle) {
 		List<Question> filteredQuestions = fdd.getQuestionsByTheme(themeTitle);
 		List<String> questionTitles = filteredQuestions.stream().map(Question::getTitle).collect(Collectors.toList());
 		comboPanel.updateQuestions(questionTitles);
 	}
-	
+
+	/**
+	 * Toggles between displaying theme information and the list of questions for
+	 * the currently selected theme.
+	 */
 	private void showListOrInfo() {
-		if (buttonShow.getText().contains("Thema")) {
+		if (buttonShow.getText().contains(THEME)) {
 			comboPanel.showInfo(info);
-			buttonShow.setText("Liste anzeigen");
+			buttonShow.setText(SHOW_LIST);
 		} else {
-			buttonShow.setText("Thema anzeigen");
+			buttonShow.setText(SHOW_THEME);
 			refreshQuestionList(themePanel.getText());
 		}
 	}
-	
+
+	/**
+	 * Refreshes the question list for the selected theme.
+	 *
+	 * @param selectedThemeTitle the title of the selected theme
+	 */
 	public void refreshQuestionList(String selectedThemeTitle) {
 		List<String> questionsForTheme = fdd.getQuestionsByTheme(selectedThemeTitle).stream().map(Question::getTitle)
 				.collect(Collectors.toList());
 		comboPanel.updateQuestions(questionsForTheme);
 	}
 
+	/**
+	 * Refreshes both the theme combo box and the list of all questions.
+	 */
 	public void refreshComboThemes() {
 		List<String> themeTitles = fdd.getThemes().stream().map(Theme::getTitle).collect(Collectors.toList());
 		comboPanel.updateThemes(themeTitles);

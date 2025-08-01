@@ -3,38 +3,57 @@ package gui.guiPanels;
 import java.awt.GridLayout;
 
 import gui.GuiConstants;
-import gui.guiSwing.SubPanel;
 
 /**
- * @author DejanKrstovski
+ * The {@code SouthPanel} is a reusable panel that combines:
+ * <ul>
+ *   <li>A {@link MessagePanel} for displaying status or error messages.</li>
+ *   <li>A {@link ButtonsPanel} containing three action buttons.</li>
+ * </ul>
+ * <p>
+ * This panel is typically placed at the bottom of a main content panel (e.g. in {@code BorderLayout.SOUTH}).
+ * </p>
  * 
- * This panel contains the message(error) panel and the Buttons panel 
+ * @author DejanKrstovski
  */
-public class SouthPanel extends SubPanel implements GuiConstants{
-	private ButtonsPanel buttonsPanel;
-	private MessagePanel messagePanel;
+public class SouthPanel extends SubPanel implements GuiConstants {
 
-	/**
-	 * This Constructor take the names of the buttons as parameter
-	 * 
-	 * @param s Name for the first button
-	 * @param m Name for the second button
-	 * @param l Name for the third button
-	 */
-	public SouthPanel(String s, String m, String l) {
-		setLayout(new GridLayout(2, 1));
-		setBorder(OUTSIDE_BORDERS);
-		messagePanel = new MessagePanel();
-		add(messagePanel);
-		buttonsPanel = new ButtonsPanel(s, m, l);
+    private final ButtonsPanel buttonsPanel;
+    private final MessagePanel messagePanel;
+
+    /**
+     * Constructs a {@code SouthPanel} with the given button labels.
+     *
+     * @param firstButtonText  the label for the first button
+     * @param secondButtonText the label for the second button
+     * @param thirdButtonText  the label for the third button
+     */
+    public SouthPanel(String firstButtonText, String secondButtonText, String thirdButtonText) {
+        setLayout(new GridLayout(2, 1));
+        setBorder(OUTSIDE_BORDERS);
+
+        messagePanel = new MessagePanel();
+        add(messagePanel);
+
+        buttonsPanel = new ButtonsPanel(firstButtonText, secondButtonText, thirdButtonText);
         add(buttonsPanel);
-	}
-	
-	public ButtonsPanel getButtonsPanel() {
+    }
+
+    /**
+     * Returns the {@link ButtonsPanel} containing the three buttons.
+     * 
+     * @return the buttons panel
+     */
+    public ButtonsPanel getButtonsPanel() {
         return buttonsPanel;
     }
-	
-	public MessagePanel getMessagePanel() {
+
+    /**
+     * Returns the {@link MessagePanel} used for displaying messages.
+     * 
+     * @return the message panel
+     */
+    public MessagePanel getMessagePanel() {
         return messagePanel;
     }
 }

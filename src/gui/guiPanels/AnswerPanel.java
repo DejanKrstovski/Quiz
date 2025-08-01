@@ -9,20 +9,23 @@ import gui.GuiConstants;
 import gui.guiSwing.MyCheckBox;
 import gui.guiSwing.MyLabel;
 import gui.guiSwing.MyTextField;
-import gui.guiSwing.SubPanel;
 
 /**
- * @author DejanKrstovski
+ * A panel that displays four rows of input fields for quiz answers.
+ * Each row contains a label, a text field for the answer, and a checkbox
+ * to indicate whether the answer is correct.
  * 
- * This panel makes the labels, the textFields and the chechBoxes <br>
- * for the answers
+ * Used in question creation/editing interfaces.
+ * 
+ * @author DejanKrstovski
  */
 public class AnswerPanel extends SubPanel implements GuiConstants{
     private ArrayList<MyTextField> answerFields;
     private ArrayList<MyCheckBox> answerCheckBoxes;
 
     /**
-     * Here are made the 4 rows of the Answer panel
+     * Constructs the AnswerPanel and initializes four rows
+     * for entering answers and marking them as correct or incorrect.
      */
 	public AnswerPanel() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -34,10 +37,11 @@ public class AnswerPanel extends SubPanel implements GuiConstants{
     }
 
 	/**
-	 * Here is the creation of the label, TextField and the checkBox
-	 * 
-	 * @param idx the number of the row
-	 * @return sub panel
+	 * Creates a single row containing a label, a text field, and a checkbox 
+	 * to represent one possible answer.
+	 *
+	 * @param idx the index of the row (0-based)
+	 * @return the constructed subpanel for a single answer row
 	 */
     private JPanel createAnswerRow(int idx) {
         SubPanel row = new SubPanel();
@@ -56,10 +60,22 @@ public class AnswerPanel extends SubPanel implements GuiConstants{
         return row;
     }
 
+    /**
+     * Returns the text field at the given index.
+     *
+     * @param i the index of the answer field (0–3)
+     * @return the text field for the specified answer
+     */
     public MyTextField getAnswerFields(int i) {
 		return answerFields.get(i);
 	}
 
+    /**
+     * Returns the checkBox at the given index.
+     *
+     * @param i the index of the checkBox (0–3)
+     * @return the checkBox indicating whether the answer is correct
+     */
 	public MyCheckBox getAnswerCheckBoxes(int i) {
 		return answerCheckBoxes.get(i);
 	}

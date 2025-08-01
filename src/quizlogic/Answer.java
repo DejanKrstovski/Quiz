@@ -1,5 +1,9 @@
 package quizlogic;
 
+/**
+ * This class represents the Answer of the question. 
+ * it contains the Answer text, the correctness and the question 
+ */
 public class Answer extends QObject {
 	private String text;
 	private Question question;
