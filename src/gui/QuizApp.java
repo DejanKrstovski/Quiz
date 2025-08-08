@@ -1,54 +1,83 @@
 package gui;
 
 import java.awt.Color;
-import java.awt.Dimension;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.UIManager;
 
-import gui.guiSwing.MyTabPane;
-import gui.mainGuiPanels.MainPlayPanel;
-import gui.mainGuiPanels.MainQuestionPanel;
-import gui.mainGuiPanels.MainThemePanel;
-import quizlogic.FakeDataDeliverer;
+import gui.Swing.MyLabel;
+import gui.Swing.MyTabPane;
+import gui.mainPanels.MainPlayPanel;
+import gui.mainPanels.MainQuestionPanel;
+import gui.mainPanels.MainStatisticPanel;
+import gui.mainPanels.MainThemePanel;
+import persistence.serialization.QuizDataManager;
 
 /**
- * The {@code QuizApp} class initializes and displays the main GUI for the quiz
- * application. It sets up the main frame and adds tabs for managing themes,
- * questions, and playing the quiz.
+ * The {@code QuizApp} class initializes and displays the main GUI window for
+ * the quiz application. It organizes the main frame and manages the tabs for
+ * themes, questions, and playing the quiz.
  * <p>
- * Each tab is visually customized using a colored label.
+ * Each tab is customized visually by using a centered orange label to enhance
+ * the UI appearance.
+ * </p>
+ * <p>
+ * The class also handles synchronization between panels, e.g., updating
+ * question themes when the theme list changes.
+ * </p>
+ * 
+ * <p>
+ * This class implements {@link GuiConstants} to use centralized GUI
+ * configuration constants.
+ * </p>
  * 
  * @author DejanKrstovski
  */
 public class QuizApp extends JFrame implements GuiConstants {
 
-	private final FakeDataDeliverer fdd = new FakeDataDeliverer();
-	private final MainQuestionPanel questionPanel = new MainQuestionPanel(fdd);
-	private final MainThemePanel themePanel = new MainThemePanel(fdd);
-	private final MainPlayPanel playPanel = new MainPlayPanel(fdd);
+	/** Panel managing the quiz questions. */
+	private final MainQuestionPanel questionPanel = new MainQuestionPanel();
+
+	/** Panel managing the quiz themes. */
+	private final MainThemePanel themePanel = new MainThemePanel();
+
+	/** Panel for playing the quiz. */
+	private final MainPlayPanel playPanel = new MainPlayPanel();
+	
+	/** Panel for statistic for the quiz. */
+	private final MainStatisticPanel statisticPanel = new MainStatisticPanel();
+
+	/** The tabbed pane containing the main sections of the application. */
 	private MyTabPane tabPane;
 
 	/**
-	 * Constructs a {@code QuizApp} and initializes the GUI components.
+	 * Constructs a new {@code QuizApp} frame and initializes the GUI.
 	 */
-	public QuizApp() {
+	private QuizApp() {
 		super("Quiz Application");
 		init();
 	}
 
 	/**
-	 * Initializes the GUI layout, tab pane, and sets visibility.
+	 * Initializes the GUI components, including the frame setup, tabbed pane, and
+	 * tab labels. Sets the frame visible at the end of initialization.
 	 */
 	private void init() {
 		setupFrame();
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			} catch (Exception e) {
+		    e.printStackTrace();
+		}
 		setupTabs();
 		customizeTabLabels();
 		setVisible(true);
+		
 	}
 
 	/**
-	 * Sets up the main window frame size, closing operation and layout properties.
+	 * Sets up the main application frame size, location, close operation, and
+	 * resize behavior.
 	 */
 	private void setupFrame() {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -57,47 +86,56 @@ public class QuizApp extends JFrame implements GuiConstants {
 	}
 
 	/**
-	 * Creates and adds tabs to the application, and registers a listener to sync
-	 * changes between panels when themes are updated.
+	 * Creates and configures the tab pane with tabs for themes, questions, and quiz
+	 * play. Also registers a listener on the theme panel to propagate theme changes
+	 * to other panels.
 	 */
 	private void setupTabs() {
 		tabPane = new MyTabPane();
-
-		// Synchronize updates across panels when themes are changed
-		themePanel.setOnThemeChangeListener(() -> {
-			questionPanel.refreshComboThemes();
-			playPanel.refreshThemes();
-		});
+		
+//		themePanel.setOnThemeChangeListener(() -> {
+//			questionPanel.refreshComboThemes();
+//			playPanel.refreshThemes();
+//		});
+		themePanel.setOnThemeChangeListener(questionPanel);
+		themePanel.setOnThemeChangeListener(playPanel);
+		
+		questionPanel.setOnQuestionsChangeListener(playPanel);
 
 		tabPane.addTab(TAB_THEMES, themePanel);
 		tabPane.addTab(TAB_QUESTIONS, questionPanel);
 		tabPane.addTab(TAB_PLAY, playPanel);
+		tabPane.addTab(TAB_STATISTIC, statisticPanel);
 
 		add(tabPane);
 	}
 
 	/**
-	 * Customizes each tab with a centered orange label.
+	 * Customizes tab headers by replacing them with centered orange labels with
+	 * padding, improving their visual appearance.
 	 */
 	private void customizeTabLabels() {
 		for (int i = 0; i < tabPane.getTabCount(); i++) {
-			JLabel tabLabel = new JLabel(tabPane.getTitleAt(i));
-			tabLabel.setPreferredSize(new Dimension(123, 25));
-			tabLabel.setHorizontalAlignment(JLabel.CENTER);
-			tabLabel.setVerticalAlignment(JLabel.CENTER);
+			MyLabel tabLabel = new MyLabel(tabPane.getTitleAt(i));
+			tabLabel.setFont(FONT_TABS);
+			tabLabel.setPreferredSize(TABS_LABEL_SIZE);
+			tabLabel.setHorizontalAlignment(MyLabel.CENTER);
+			tabLabel.setVerticalAlignment(MyLabel.CENTER);
 			tabLabel.setOpaque(true);
-			tabLabel.setBackground(Color.ORANGE);
-			tabLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			tabLabel.setBackground(Color.CYAN);
+			tabLabel.setBorder(DISTANCE_BETWEEN_LABEL_TABS);
 			tabPane.setTabComponentAt(i, tabLabel);
 		}
 	}
 
 	/**
-	 * Main entry point to launch the Quiz Application.
+	 * The main method to launch the Quiz Application.
 	 *
-	 * @param args Command-line arguments (not used)
+	 * @param args command-line arguments (not used)
 	 */
 	public static void main(String[] args) {
+		QuizDataManager.getInstance().getAllThemes();
+		QuizDataManager.getInstance().getAllQuestions();
 		new QuizApp();
 	}
 }
