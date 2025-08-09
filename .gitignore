@@ -1,4 +1,6 @@
 #Ignore my quiz Data
-QuizData
+QuizData/
 #Ignore my folder with the folder path for the data
-Folders.
+persistence/serialization/Folders.java
+#Ignore my tests
+tests/
