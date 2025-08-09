@@ -134,15 +134,15 @@ public class ComboBoxJListPanel<T, U> extends SubPanel {
     @SuppressWarnings("unchecked")
 	public void showInfo(String info) {
         listModel.clear();
-        // Add padding and info lines visually in the list
-        for (int i = 0; i < 5; i++) {
+
+        for (int i = 0; i < 10; i++) {
             listModel.addElement((U) new QuestionListItem(-1, "\n"));
         }
-        listModel.addElement((U) new QuestionListItem(-1, "=== Theme Info ==="));
+        listModel.addElement((U) new QuestionListItem(-1, "========= Theme Info ========="));
         for (String line : info.split("\n")) {
             listModel.addElement((U) new QuestionListItem(-1, line));
         }
-        listModel.addElement((U) new QuestionListItem(-1, "=================="));
+        listModel.addElement((U) new QuestionListItem(-1, "=============================="));
         list.ensureIndexIsVisible(0);
         revalidate();
         repaint();

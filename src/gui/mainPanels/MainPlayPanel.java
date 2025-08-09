@@ -104,7 +104,6 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	 */
 	private void fillWithData(final Question question) {
 		if (question == null) {
-			// No question, clear all visible fields
 			themePanel.setText(EMPTY_STRING);
 			titlePanel.setText(EMPTY_STRING);
 			questionPanel.setTextInfo(EMPTY_STRING);

@@ -30,6 +30,11 @@ public class Answer extends DataAccessObject {
     /** Whether this answer is the correct choice for its related question. */
     private boolean correct;
 
+    public Answer(String text, boolean trueOrFalse) {
+    		this.text = text;
+    		this.correct = trueOrFalse;
+    }
+    
     /**
      * Returns the text label of this answer.
      *

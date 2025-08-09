@@ -130,7 +130,7 @@ public class Question extends DataAccessObject {
      */
     @Override
     public int hashCode() {
-        return getId();
+        return Integer.hashCode(getId());
     }
 
     /**

@@ -51,9 +51,6 @@ import quizlogic.Theme;
  */
 public class MainThemePanel extends SubPanel implements GuiConstants {
 
-    /** Marker for no selected theme. */
-    private static final int NO_SELECTION = -1;
-
     private SouthPanel bottomPanel;
     private SubPanel westPanel;
     private SubPanel centerPanel;
@@ -138,6 +135,7 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
 
     /** @return Center panel with scrollable theme list. */
     private SubPanel initCenterPanel() {
+        dataManager.getAllThemesAndQuestions();
         refreshThemesAndItems();
         labelJListPanel = new LabelJListPanel<>(LABEL_THEMES, themeItems);
         labelJListPanel.clearSelectionListeners();
@@ -152,7 +150,6 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
 
     /** Reloads theme data from manager and rebuilds ThemeListItem list. */
     private void refreshThemesAndItems() {
-        dataManager.getAllThemes();
         allThemes = dataManager.getThemes();
         themeItems = allThemes.stream()
                               .map(theme -> new ThemeListItem(theme.getId(), theme.getTitle()))
@@ -199,7 +196,6 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
             showMessage(WARNING_EMPTY_TITLE_INFO);
             return;
         }
-        // Prevent duplicate titles except for the currently edited theme
         if (themeItems.stream()
                       .anyMatch(item -> item.getTitle().equals(title) && item.getId() != selectedThemeId)) {
             showMessage(WARNING_THEME_EXISTS);

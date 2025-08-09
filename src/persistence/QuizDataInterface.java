@@ -31,7 +31,7 @@ public interface QuizDataInterface {
      * 
      * @return an {@link ArrayList} containing all themes; empty list if none found
      */
-    public void getAllThemes();
+    public void getAllThemesAndQuestions();
 
     /**
      * Retrieves all {@link Question}s associated with the specified {@link Theme}.

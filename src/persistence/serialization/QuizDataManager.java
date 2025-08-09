@@ -43,7 +43,7 @@ import quizlogic.Theme;
  * 
  * @author
  */
-public class QuizDataManager implements QuizDataInterface, Constants, FolderNames{
+public class QuizDataManager implements QuizDataInterface, Constants, Folders{
 
 	/** Singleton instance of QuizDataManager. */
 	private static QuizDataManager instance = null;
@@ -62,11 +62,7 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 
 	ErrorHandler errorHandler = ErrorHandler.getInstance();
 
-	private int counter_za_prasanja;
-
 	private int counterZaTemi;
-
-	private int counterRandom;
 
 	/**
 	 * Returns the singleton instance of {@code QuizDataManager}.
@@ -88,14 +84,12 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	 */
 	@Override
 	public Question getRandomQuestion() {
-		counterRandom++;
 		if (allThemeQuestions == null || allThemeQuestions.isEmpty()) {
 			errorHandler.setError(NO_QUESTIONS_EXISTS);
 			return null;
 		}
 		Random random = new Random();
 		int index = random.nextInt(allThemeQuestions.size());
-		System.out.println("Random question " + counterRandom);
 		return allThemeQuestions.get(index);
 	}
 
@@ -108,8 +102,31 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	 * 
 	 * @return list of all {@link Theme} objects; empty list if none found
 	 */
+	public List<Theme> getAllThemesTest() {
+		File folder = new File(TEST_FOLDER);
+		themes = new ArrayList<>();
+		if (!folder.exists()) {
+			if (folder.mkdir()) {
+				errorHandler.setInfo(NEW_FOLDER_CREATED);
+			} else {
+				errorHandler.setError(FAILED_TO_CREATE_FOLDER);
+			}
+		}
+		File[] files = folder.listFiles((dir, name) -> name.startsWith(THEME));
+		if (files != null) {
+			for (File file : files) {
+				try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+					Theme theme = (Theme) ois.readObject();
+					themes.add(theme);
+				} catch (Exception e) {
+					errorHandler.setError(ERROR_LOADING_FILE + file.getName() + ": " + e.getMessage());
+				}
+			}
+		}
+		return themes;
+	}
 	@Override
-	public void getAllThemes() {
+	public void getAllThemesAndQuestions() {
 		counterZaTemi++;
 		File folder = new File(DATA_FOLDER);
 		themes = new ArrayList<>();
@@ -131,6 +148,7 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 					errorHandler.setError(ERROR_LOADING_FILE + file.getName() + ": " + e.getMessage());
 				}
 			}
+			getAllQuestions();
 		}
 		System.out.println("Citam files " + counterZaTemi);
 	}
@@ -141,7 +159,6 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	 * @return list of all {@link Question} objects
 	 */
 	public void getAllQuestions() {
-		counter_za_prasanja++;
 		if (allThemeQuestions == null) {
 			allThemeQuestions = new ArrayList<>();
 		} else {
@@ -154,7 +171,6 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 				allThemeQuestions.addAll(themeQuestions);
 			}
 		}
-		System.out.println("Site prasanja od file " + counter_za_prasanja);
 	}
 
 	/**
@@ -205,6 +221,28 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	}
 
 	/**
+	 * Test method for JUnit
+	 * 
+	 * @param theme
+	 * @return message for success or error
+	 */
+	public String saveThemeTests(Theme theme) {
+		try {
+			if (theme.getId() < 0) {
+				theme.setId(createNewThemeId());
+			}
+			try (FileOutputStream fos = new FileOutputStream(TEST_FOLDER + THEME + theme.getId());
+					ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+				oos.writeObject(theme);
+				oos.flush();
+			}
+			return THEME_SUCCESFULLY_SAVED;
+		} catch (IOException e) {
+			return ERROR_SAVING_THEME + e.getMessage();
+		}
+	}
+	
+	/**
 	 * Saves or updates the given theme by serializing it to a file. If the theme ID
 	 * is less than zero, assigns a new ID.
 	 * 
@@ -218,13 +256,12 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 			if (theme.getId() < 0) {
 				theme.setId(createNewThemeId());
 			}
-
 			try (FileOutputStream fos = new FileOutputStream(THEME_FILE_PREFIX + theme.getId());
 					ObjectOutputStream oos = new ObjectOutputStream(fos)) {
 				oos.writeObject(theme);
 				oos.flush();
 			}
-
+			updateThemesAndAllQuestions();
 			return THEME_SUCCESFULLY_SAVED;
 		} catch (IOException e) {
 			return ERROR_SAVING_THEME + e.getMessage();
@@ -286,7 +323,7 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 		}
 
 		if (storedTheme == null) {
-			return THEME_FROM_QUESTION;
+			return ERROR_THEME_FROM_QUESTION;
 		}
 
 		List<Question> questions = storedTheme.getQuestions();
@@ -295,7 +332,7 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 			storedTheme.setQuestions(questions);
 		}
 
-		if (question.getId() < 0) {
+		if (question.getId() < 0 || allThemeQuestions.contains(question)) {
 			question.setId(createNewQuestionId());
 			questions.add(question);
 		} else {
@@ -372,6 +409,26 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	 * 
 	 * @return the next available unique theme ID
 	 */
+	public int createNewThemeIdTest() {
+		File folder = new File(TEST_FOLDER);
+		int maxId = 0;
+
+		if (folder.exists() && folder.listFiles() != null) {
+			for (File file : folder.listFiles()) {
+				String name = file.getName();
+				if (name.startsWith(THEME)) {
+					try {
+						int id = Integer.parseInt(name.substring(THEME.length()));
+						if (id > maxId) {
+							maxId = id;
+						}
+					} catch (NumberFormatException ignored) {
+					}
+				}
+			}
+		}
+		return maxId + 1;
+	}
 	public int createNewThemeId() {
 		File folder = new File(DATA_FOLDER);
 		int maxId = 0;
@@ -401,9 +458,7 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 	 */
 	public int createNewQuestionId() {
 		int maxId = 0;
-		List<Theme> themeList = themes;
-
-		for (Theme theme : themeList) {
+		for (Theme theme : themes) {
 			List<Question> questions = theme.getQuestions();
 			if (questions != null) {
 				for (Question question : questions) {
@@ -435,8 +490,8 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 		return themes;
 	}
 
-	public void updateThemes() {
-		getAllThemes();
+	public void updateThemesAndAllQuestions() {
+		getAllThemesAndQuestions();
 	}
 	
 	public void setThemes(List<Theme> themes) {
@@ -445,11 +500,5 @@ public class QuizDataManager implements QuizDataInterface, Constants, FolderName
 
 	public List<Question> getAllThemeQuestions() {
 		return allThemeQuestions;
-	}
-
-	public void reloadAllThemeQuestions() {
-		getAllQuestions();
-	}
-
-	
+	}	
 }

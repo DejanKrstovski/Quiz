@@ -18,7 +18,7 @@ public interface Constants {
     public static final String THEME ="theme_";
     public static final String ERROR_SAVING_THEME = "Fehler beim Speichern: ";
     public static final String QUESTION_ASSIGN_THEME = "Die Frage muss zu eine Thema gehören";
-    public static final String THEME_FROM_QUESTION = "Das Thema von die Frage könnte nicht gefunden werden.";
+    public static final String ERROR_THEME_FROM_QUESTION = "Das Thema von die Frage könnte nicht gefunden werden.";
     public static final String ERROR_SAVING_QUESTION = "Die Frage könnte nicht gespeichert werden: ";
 
 }

@@ -11,7 +11,6 @@ import gui.mainPanels.MainPlayPanel;
 import gui.mainPanels.MainQuestionPanel;
 import gui.mainPanels.MainStatisticPanel;
 import gui.mainPanels.MainThemePanel;
-import persistence.serialization.QuizDataManager;
 
 /**
  * The {@code QuizApp} class initializes and displays the main GUI window for
@@ -35,11 +34,11 @@ import persistence.serialization.QuizDataManager;
  */
 public class QuizApp extends JFrame implements GuiConstants {
 
-	/** Panel managing the quiz questions. */
-	private final MainQuestionPanel questionPanel = new MainQuestionPanel();
-
 	/** Panel managing the quiz themes. */
 	private final MainThemePanel themePanel = new MainThemePanel();
+	
+	/** Panel managing the quiz questions. */
+	private final MainQuestionPanel questionPanel = new MainQuestionPanel();
 
 	/** Panel for playing the quiz. */
 	private final MainPlayPanel playPanel = new MainPlayPanel();
@@ -92,15 +91,16 @@ public class QuizApp extends JFrame implements GuiConstants {
 	 */
 	private void setupTabs() {
 		tabPane = new MyTabPane();
-		themePanel.addOnThemeChangeListener(questionPanel);
-		themePanel.addOnThemeChangeListener(playPanel);
-		questionPanel.setOnQuestionsChangeListener(playPanel);
 
 		tabPane.addTab(TAB_THEMES, themePanel);
 		tabPane.addTab(TAB_QUESTIONS, questionPanel);
 		tabPane.addTab(TAB_PLAY, playPanel);
 		tabPane.addTab(TAB_STATISTIC, statisticPanel);
 
+		themePanel.addOnThemeChangeListener(questionPanel);
+		themePanel.addOnThemeChangeListener(playPanel);
+		questionPanel.setOnQuestionsChangeListener(playPanel);
+		
 		add(tabPane);
 	}
 
@@ -128,8 +128,6 @@ public class QuizApp extends JFrame implements GuiConstants {
 	 * @param args command-line arguments (not used)
 	 */
 	public static void main(String[] args) {
-		QuizDataManager.getInstance().getAllThemes();
-		QuizDataManager.getInstance().getAllQuestions();
 		new QuizApp();
 	}
 }

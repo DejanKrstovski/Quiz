@@ -112,7 +112,7 @@ public interface GuiConstants {
     public static final String WARNING_THEME_EXISTS = "Das Thema ist bereits vorhanden.";
     public static final String WARNING_ALL_FIELDS = "Bitte alle Felder ausfüllen!";
     public static final String ERROR_THEME_LOAD = "Das Thema konnte nicht geladen werden.";
-    public static final String ERROR_THEME_FIND = "Das Thema konnte nicht gefunden werden.";
+    public static final String ERROR_THEME_NOT_FOUND = "Das Thema konnte nicht gefunden werden.";
     public static final String QUESTION_DELETING_NOT_POSSIBLE = "Die Frage konnte nicht gelöscht werden.";
     public static final String QUESTION_DELETE_INFORMATION = "Möchten Sie diese Frage wirklich löschen?";
     public static final String QUESTION_SAVED = "Frage erfolgreich gespeichert.";
