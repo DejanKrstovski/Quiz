@@ -27,6 +27,11 @@ import javax.swing.border.Border;
  * @author DejanKrstovski
  */
 public interface GuiConstants {
+	
+	/**
+	 * This is 
+	 */
+	public static final int NO_SELECTION = -1;
     /**
      * X-coordinate for the main window's initial position.
      */
@@ -113,6 +118,8 @@ public interface GuiConstants {
     public static final String QUESTION_SAVED = "Frage erfolgreich gespeichert.";
     public static final String ERROR_LOAD_QUESTION = "Ausgewählte Frage konnte nicht geladen werden.";
     public static final String ERROR_NO_QUESTIONS_FOR_THEME = "Keine Fragen für das Thema vorhanden.";
+    public static final String CHOOSE_AN_ANSWER = "Bitte eine Antwort auswählen!";
+    public static final String CORRECT_ANSWER = "Korrekt! Alle Antworten sind selektiert.";
     
     // Fonts for different components
     public static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 20);

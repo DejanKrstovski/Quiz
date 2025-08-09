@@ -1,8 +1,6 @@
 package persistence;
 
 public interface Constants {
-	public static final String DATA_FOLDER = "C:\\Users\\DejanKrstovski\\eclipse-myworkspace\\Quiz\\QuizData";
-    public static final String THEME_FILE_PREFIX = DATA_FOLDER + "\\theme_";
     
     public static final String NO_QUESTIONS_EXISTS = "Keine Fragen vorhanden in die Themen";
     public static final String FAILED_TO_CREATE_FOLDER = "Failed to create data directory.";

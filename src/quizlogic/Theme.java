@@ -2,78 +2,74 @@ package quizlogic;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import persistence.DataAccessObject;
 
 /**
- * Represents a quiz Theme, which groups related questions.
+ * Represents a thematic group for quiz questions.
  * <p>
- * Each Theme has a unique identifier (inherited from {@link DataAccessObject}), a title,
- * descriptive information, and a list of associated {@link Question}s.
+ * Each Theme instance is identified uniquely by an integer ID inherited from {@link DataAccessObject}.
+ * It has a title, descriptive info, and a modifiable list of associated {@link Question}s.
  * </p>
  * <p>
- * The equality and hash code computations rely on the unique ID,
- * assuming it is immutable and unique across instances.
+ * The questions list is lazily initialized to guarantee non-null return from {@link #getQuestions()}.
+ * If {@link #setQuestions(List)} is called with {@code null}, the list is reset to an empty modifiable list.
+ * </p>
+ * <p>
+ * Equality and hash code are based solely on the ID.
+ * Instances with unset (default) IDs may not behave as expected in collections.
  * </p>
  * 
- * <p>This class lazily initializes the internal question list to avoid null references.</p>
- * 
- * @author 
+ * @author DejanKrstovski
  */
 public class Theme extends DataAccessObject {
 
-    /** The title of this theme. */
     private String themeTitle;
-
-    /** Additional information or description for this theme. */
     private String themeInfo;
-
-    /** The list of questions associated with this theme. Lazily initialized. */
     private List<Question> questions;
 
     /**
      * Returns the title of this theme.
-     * 
-     * @return the theme title
+     *
+     * @return the theme title, can be {@code null}
      */
     public String getTitle() {
         return themeTitle;
     }
 
     /**
-     * Sets the title of this theme.
-     * 
-     * @param title the title to set
+     * Sets the theme's title.
+     *
+     * @param title the title to set, can be {@code null}
      */
     public void setTitle(String title) {
         this.themeTitle = title;
     }
 
     /**
-     * Returns additional information or description about this theme.
-     * 
-     * @return the info string
+     * Returns extra descriptive information for this theme.
+     *
+     * @return the theme info, can be {@code null}
      */
     public String getThemeInfo() {
         return themeInfo;
     }
 
     /**
-     * Sets additional information or description for this theme.
-     * 
-     * @param info the info string to set
+     * Sets extra descriptive information for this theme.
+     *
+     * @param info the information string to set, can be {@code null}
      */
     public void setThemeInfo(String info) {
         this.themeInfo = info;
     }
 
     /**
-     * Returns the list of questions associated with this theme.
+     * Returns the list of associated questions.
      * <p>
-     * This list is lazily initialized and never returns null.
+     * The returned list is always non-null and modifiable.
      * </p>
-     * 
-     * @return a modifiable list of {@link Question} objects belonging to this theme
+     *
+     * @return the list of {@link Question} objects; never {@code null}
      */
     public List<Question> getQuestions() {
         if (questions == null) {
@@ -83,39 +79,38 @@ public class Theme extends DataAccessObject {
     }
 
     /**
-     * Sets the list of questions for this theme.
-     * 
-     * @param questions the list of questions to assign; may be null
+     * Sets the list of associated questions.
+     * <p>
+     * Passing {@code null} resets to an empty, modifiable list.
+     * </p>
+     *
+     * @param questions the new list of questions, or {@code null} to clear
      */
     public void setQuestions(List<Question> questions) {
-        this.questions = questions;
+        this.questions = (questions != null) ? questions : new ArrayList<>();
     }
 
     /**
-     * Checks equality between this and another object.
+     * Checks equality with another object.
      * <p>
-     * Equality is based solely on the unique {@code id} inherited from {@link DataAccessObject}.
-     * Two themes are equal if they share the same ID.
+     * Two Themes are considered equal if they have the same unique ID.
      * </p>
-     * 
-     * @param obj the object to compare with
-     * @return {@code true} if equal, {@code false} otherwise
+     *
+     * @param obj the object to compare to
+     * @return {@code true} if the IDs match, {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-
         if (!(obj instanceof Theme)) return false;
-
         Theme other = (Theme) obj;
-
         return this.getId() == other.getId();
     }
 
     /**
-     * Returns hash code based on the unique ID.
-     * 
-     * @return the hash code value for this theme
+     * Computes the hash code for this Theme based on its unique ID.
+     *
+     * @return the hash code value
      */
     @Override
     public int hashCode() {
@@ -123,10 +118,10 @@ public class Theme extends DataAccessObject {
     }
 
     /**
-     * Returns a string representation of the theme.
-     * Useful for debugging and logging.
-     * 
-     * @return a string describing this theme including id, title, and info
+     * Returns a string representation containing the ID, title, info, and 
+     * question count of this theme. Useful for debugging and logging.
+     *
+     * @return a string summary of this Theme
      */
     @Override
     public String toString() {

@@ -3,67 +3,76 @@ package quizlogic;
 import persistence.DataAccessObject;
 
 /**
- * Represents an answer option for a quiz question.
+ * Represents a possible answer option for a quiz question.
  * <p>
- * Each answer has textual content and a boolean flag indicating whether it is the correct answer.
+ * Each {@code Answer} has a textual label and a flag indicating whether it is the correct choice.
+ * This class is a simple data holder and performs no validation; the text may be {@code null} or empty.
+ * Validation should be handled externally (e.g., by a validator utility).
  * </p>
  * <p>
- * This class extends {@link DataAccessObject} for persistence integration.
+ * Extends {@link DataAccessObject} to support persistence operations.
  * </p>
- * 
- * <p><b>Note:</b> No validation is performed on the text; it can be null or empty.</p>
- * 
- * @author  
+ *
+ * <p><b>Usage example:</b></p>
+ * <pre>
+ * Answer answer = new Answer();
+ * answer.setText("42");
+ * answer.setCorrect(true);
+ * </pre>
+ *
+ * @author DejanKrstovski
  */
 public class Answer extends DataAccessObject {
 
-    /** The text content of the answer option. */
+    /** The text label of this answer; may be {@code null} or empty. */
     private String text;
 
-    /** Indicates if the answer is the correct choice for its question. */
+    /** Whether this answer is the correct choice for its related question. */
     private boolean correct;
 
     /**
-     * Returns the text content of this answer.
-     * 
-     * @return the answer text, may be null
+     * Returns the text label of this answer.
+     *
+     * @return the answer text; may be {@code null} if unset
      */
     public String getText() {
         return text;
     }
 
     /**
-     * Sets the text content of this answer.
-     * 
-     * @param text the answer text to set; may be null
+     * Sets the text label of this answer.
+     *
+     * @param text the answer text to set; may be {@code null} to indicate no text
      */
     public void setText(String text) {
         this.text = text;
     }
 
     /**
-     * Indicates whether this answer is marked as correct.
-     * 
-     * @return {@code true} if correct, {@code false} otherwise
+     * Returns whether this answer is marked as correct.
+     *
+     * @return {@code true} if this answer is correct; {@code false} otherwise
      */
     public boolean isCorrect() {
         return correct;
     }
 
     /**
-     * Sets whether this answer is correct.
-     * 
-     * @param correct {@code true} marks the answer as correct; {@code false} otherwise
+     * Marks this answer as correct or incorrect.
+     *
+     * @param correct {@code true} to mark as correct; {@code false} to mark as incorrect
      */
     public void setCorrect(boolean correct) {
         this.correct = correct;
     }
 
     /**
-     * Returns a string representation of this answer.
-     * Useful for debugging and logging.
-     * 
-     * @return a string describing this answer
+     * Returns a string representation of this answer, including its text and correctness flag.
+     * <p>
+     * Intended for debugging and logging, not for display in a user interface.
+     * </p>
+     *
+     * @return a string representation of this answer
      */
     @Override
     public String toString() {
@@ -71,11 +80,16 @@ public class Answer extends DataAccessObject {
     }
 
     /**
-     * Compares this answer to another object for equality.
-     * Two answers are equal if they have the same text and correctness flag.
-     * 
-     * @param obj the object to compare with
-     * @return {@code true} if equal; {@code false} otherwise
+     * Compares this answer with another object for equality.
+     * Two answers are considered equal if they have the same text (including both being {@code null})
+     * and the same correctness flag.
+     * <p>
+     * <b>Note:</b> Any persistence identifier defined in {@link DataAccessObject} is not considered
+     * in this equality check.
+     * </p>
+     *
+     * @param obj the object to compare to
+     * @return {@code true} if the objects represent the same answer; {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -89,9 +103,12 @@ public class Answer extends DataAccessObject {
     }
 
     /**
-     * Returns a hash code for this answer.
-     * 
-     * @return a hash code derived from text and correctness
+     * Returns a hash code for this answer based on its text and correctness flag.
+     * <p>
+     * <b>Note:</b> Any persistence identifier in {@link DataAccessObject} is not included.
+     * </p>
+     *
+     * @return the hash code for this answer
      */
     @Override
     public int hashCode() {

@@ -20,15 +20,18 @@ import java.util.List;
  */
 public class Validator{
 
-    /**
-     * Validates the specified {@link Theme}.
-     * <p>
-     * Checks that the theme is not null, has a non-empty title, and that all contained questions are valid.
-     * </p>
-     * 
-     * @param theme the theme to validate, may be null
-     * @return {@code true} if the theme and all its questions are valid; {@code false} otherwise
-     */
+	/**
+	 * Validates the specified {@link Theme}.
+	 *
+	 * Criteria:
+	 * <ul>
+	 *   <li>Theme is not null</li>
+	 *   <li>Title is not null or empty</li>
+	 *   <li>All contained questions are valid (see {@link #validateQuestion})</li>
+	 * </ul>
+	 * @param theme the theme to validate, may be null
+	 * @return {@code true} if the theme and all its questions are valid; {@code false} otherwise
+	 */
     public static boolean validateTheme(Theme theme) {
         ErrorHandler errorHandler = ErrorHandler.getInstance();
 

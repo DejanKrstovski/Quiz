@@ -43,7 +43,7 @@ import quizlogic.Theme;
  * 
  * @author
  */
-public class QuizDataManager implements QuizDataInterface, Constants {
+public class QuizDataManager implements QuizDataInterface, Constants, FolderNames{
 
 	/** Singleton instance of QuizDataManager. */
 	private static QuizDataManager instance = null;

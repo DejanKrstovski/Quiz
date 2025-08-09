@@ -105,32 +105,32 @@ public class Question extends DataAccessObject {
     /**
      * Compares this question with another object for equality.
      * <p>
-     * Two {@code Question} objects are considered equal if their titles are equal (case-sensitive).
+     * Two {@code Question} objects are considered equal if their id's are equal.
      * </p>
      * 
      * @param obj the object to compare with
-     * @return {@code true} if both are {@code Question} instances having the same title; {@code false} otherwise
+     * @return {@code true} if both are {@code Question} instances having the same id; {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-
-        if (!(obj instanceof Question)) return false;
-
+        if (obj == null || getClass() != obj.getClass()) return false;
         Question other = (Question) obj;
-        if (title == null) return other.title == null;
-
-        return title.equals(other.title);
+        return this.getId() == other.getId();
     }
 
     /**
-     * Returns a hash code value for the question based on its title.
-     * 
-     * @return a hash code based on title; 0 if title is {@code null}
+     * Returns a hash code value for this question based on its unique identifier (id).
+     * <p>
+     * This implementation returns the value of {@code getId()} directly, 
+     * so equal IDs will produce the same hash code.
+     * </p>
+     *
+     * @return the hash code, which is the id of this question
      */
     @Override
     public int hashCode() {
-        return title != null ? title.hashCode() : 0;
+        return getId();
     }
 
     /**
@@ -140,6 +140,6 @@ public class Question extends DataAccessObject {
      */
     @Override
     public String toString() {
-        return "Question{title='" + title + '\'' + ", text='" + text + '\'' + '}';
+        return "Question{id='" + getId() +'\'' +  ", title='" + title + '\'' + ", text='" + text + '\'' + '}';
     }
 }

@@ -1,13 +1,13 @@
 package gui.mainPanels;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
 
 import gui.GuiConstants;
 import gui.Panels.AnswerPanel;
@@ -19,40 +19,41 @@ import gui.Panels.SubPanel;
 import gui.Swing.MyButton;
 import gui.Swing.MyLabel;
 import helpers.QuestionListItem;
+import helpers.ThemeListItem;
 import persistence.serialization.QuizDataManager;
 import quizlogic.Answer;
 import quizlogic.ErrorHandler;
 import quizlogic.Question;
 import quizlogic.Theme;
 import quizlogic.Validator;
+
 /**
- * Panel for managing quiz questions, including creation, editing, deleting, and displaying.
+ * Panel for managing quiz questions, supporting creation, editing, and deletion.
  * <p>
- * Provides UI components to select themes and questions, input question text and answers,
- * and interact with the quiz data backend via {@link QuizDataManager}.
+ * Displays a list of questions filtered by the selected theme ({@link ThemeListItem}),
+ * and allows viewing/editing their title, theme, question text, and possible answers.
  * </p>
- * <p>
- * Supports registering {@link QuestionsChangeListener} to notify external components
- * about changes in the question data for synchronization purposes.
- * </p>
- * <p>
- * Internally, the panel contains multiple subpanels and input fields:
+ * 
+ * <h2>Core Functions:</h2>
  * <ul>
- *   <li>Theme selector and display panel</li>
- *   <li>Question title and text area</li>
- *   <li>Answer input fields with correctness checkboxes</li>
- *   <li>Control buttons for saving, creating new, and deleting questions</li>
+ *   <li>Select theme from combo box to load questions for that theme.</li>
+ *   <li>Create new questions for a theme.</li>
+ *   <li>Edit existing questions.</li>
+ *   <li>Delete questions.</li>
  * </ul>
- * </p>
  * 
- * The UI updates the list of questions dynamically based on selected themes,
- * and handles user interaction events for question management.
+ * <p>Uses ID-based lookups (via {@link ThemeListItem} and {@link QuestionListItem})
+ * to avoid issues with duplicate or renamed titles. Implements {@link ThemeChangeListener}
+ * so it refreshes when themes change in other panels.</p>
  * 
- * @author DejanKrstovski
+ * @author 
  */
 public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, GuiConstants {
 
-    /** Backend manager for quiz data operations */
+    /** Constant ID for the "All Themes" pseudo-theme. */
+    private static final int THEME_ALL_ID = -1;
+
+    /** Access point for quiz themes and questions. */
     private final QuizDataManager dataManager = QuizDataManager.getInstance();
 
     private MyButton buttonShow;
@@ -63,26 +64,21 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
     private LabelFieldPanel titlePanel;
     private LabelTextAreaPanel questionPanel;
     private AnswerPanel answerPanel;
-    private ComboBoxJListPanel comboPanel;
 
-    /** Stores current selected theme info (description to display) */
+    private ComboBoxJListPanel<ThemeListItem, QuestionListItem> comboPanel;
     private String selectedThemeInfo;
-
-    /** ID of the current selected question; -1 if no selection */
     private int currentQuestionId = -1;
+    private int selectedThemeId = THEME_ALL_ID;
 
-    /** Currently selected theme */
+    private List<Theme> allThemes = new ArrayList<>();
+    private List<ThemeListItem> themeItems = new ArrayList<>();
     private Theme selectedTheme;
 
-    /** Listener notified on question list changes */
     private QuestionsChangeListener questionsChangeListener;
-
-    /** Flag to disable combo box listener during programmatic updates */
     private boolean isUpdatingCombo = false;
 
     /**
-     * Constructs a new {@code MainQuestionPanel}, initializes the user interface,
-     * and sets up event listeners.
+     * Constructs the panel, building its layout, components, and initial listeners.
      */
     public MainQuestionPanel() {
         super();
@@ -92,44 +88,38 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
     }
 
     /**
-     * Populates the UI fields with data from the specified question.
-     * If the question is null, clears all fields.
+     * Populates UI fields with the given question's data, or clears fields if null.
      * 
-     * @param question The question whose data will be displayed, or null to clear inputs.
+     * @param question Question to display, or null to clear.
      */
     private void fillWithData(final Question question) {
+        clearAllFields(); // start by clearing
         if (question != null) {
             currentQuestionId = question.getId();
             themePanel.setText(question.getTheme().getTitle());
             titlePanel.setText(question.getTitle());
             questionPanel.setTextInfo(question.getText());
-
             final List<Answer> answers = question.getAnswers();
             for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
                 answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
                 answerPanel.getAnswerCheckBoxes(i).setSelected(answers.get(i).isCorrect());
             }
-        } else {
-            currentQuestionId = -1;
-            clearAllFields();
         }
     }
 
-    /**
-     * Initializes the layout, components, and event listeners.
-     */
+    /** Initializes layout, components, and combo box listener. */
     private void init() {
         initLayout();
         initComponents();
         initComboBoxListener();
     }
 
-    /** Initializes layout of the panel. */
+    /** Sets main layout manager. */
     private void initLayout() {
         setLayout(new BorderLayout());
     }
 
-    /** Creates and adds subpanels to the main panel. */
+    /** Creates subcomponents and adds them to the main layout. */
     private void initComponents() {
         westPanel = initWestPanel();
         centerPanel = initCenterPanel();
@@ -138,9 +128,11 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         add(westPanel, BorderLayout.WEST);
         add(centerPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
+
+        refreshThemesFromData();
     }
 
-    /** Initializes the panel on the west side containing question details and answers. */
+    /** Builds the left-hand panel with form fields and answer editor. */
     private SubPanel initWestPanel() {
         final SubPanel panel = new SubPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
@@ -155,14 +147,14 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         return panel;
     }
 
-    /** Initializes the theme display/input panel. */
+    /** @return Theme label/display field. */
     private LabelFieldPanel initThemePanel() {
         themePanel = new LabelFieldPanel(LABEL_THEME, EMPTY_STRING);
         themePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
         return themePanel;
     }
 
-    /** Initializes the title input panel. */
+    /** @return Question title text field. */
     private LabelFieldPanel initTitlePanel() {
         titlePanel = new LabelFieldPanel(LABEL_TITLE, EMPTY_STRING);
         titlePanel.getTextField().setEditable(true);
@@ -170,7 +162,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         return titlePanel;
     }
 
-    /** Initializes the question text area panel. */
+    /** @return Question text area. */
     private LabelTextAreaPanel initQuestionPanel() {
         questionPanel = new LabelTextAreaPanel(LABEL_QUESTION);
         questionPanel.getQuestionTextArea().setEditable(true);
@@ -178,7 +170,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         return questionPanel;
     }
 
-    /** Creates container panel with labels for possible and correct answers. */
+    /** @return Header row for possible/correct answers. */
     private SubPanel initPossibleAnswerPanel() {
         final SubPanel panel = new SubPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
@@ -193,13 +185,13 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         return panel;
     }
 
-    /** Initializes the answers input panel. */
+    /** @return Answers entry panel. */
     private AnswerPanel initAnswerPanel() {
         answerPanel = new AnswerPanel();
         return answerPanel;
     }
 
-    /** Initializes the center panel containing theme label and selection list. */
+    /** @return Center panel holding theme label and combo/question list. */
     private SubPanel initCenterPanel() {
         final SubPanel panel = new SubPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
@@ -209,81 +201,68 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         return panel;
     }
 
-    /** Creates a horizontal panel with theme question label and show theme button. */
+    /** @return Panel with theme label and "show theme info" button. */
     private SubPanel initThemeLabelPanel() {
         final SubPanel panel = new SubPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
         panel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-
         MyLabel questionLabel = new MyLabel(LABEL_QUESTION_FOR_THEME);
         buttonShow = new MyButton(SHOW_THEME);
-
         panel.add(questionLabel);
         panel.add(Box.createHorizontalGlue());
         panel.add(buttonShow);
-
         buttonShow.setVisible(false);
         return panel;
     }
 
-    /** Initializes the combo box and question list panel for theme/question selection. */
-    private ComboBoxJListPanel initComboPanel() {
-        final List<String> themeTitles = dataManager.getThemes().stream()
-                .map(Theme::getTitle)
-                .collect(Collectors.toList());
-
-        final List<String> comboItems = new ArrayList<>();
-        comboItems.add(ALL_THEMES);
-        comboItems.addAll(themeTitles);
-
+    /** @return ComboBoxJListPanel initialized with themes and all questions. */
+    private ComboBoxJListPanel<ThemeListItem, QuestionListItem> initComboPanel() {
+        refreshThemesFromData();
         final List<QuestionListItem> questionItems = dataManager.getAllThemeQuestions().stream()
                 .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
                 .collect(Collectors.toList());
-        comboPanel = new ComboBoxJListPanel(comboItems, questionItems);
+        comboPanel = new ComboBoxJListPanel<>(themeItems, questionItems);
         return comboPanel;
     }
 
-    /**
-     * Adds listener to theme selection combo box to update the question list and related UI.
-     */
+    /** Loads themes and builds ThemeListItem objects (including ALL_THEMES). */
+    private void refreshThemesFromData() {
+        allThemes = dataManager.getThemes();
+        themeItems = new ArrayList<>();
+        themeItems.add(new ThemeListItem(THEME_ALL_ID, ALL_THEMES));
+        themeItems.addAll(
+            allThemes.stream()
+                     .map(t -> new ThemeListItem(t.getId(), t.getTitle()))
+                     .collect(Collectors.toList()));
+    }
+
+    /** Handles theme selection changes in the combo box. */
     private void initComboBoxListener() {
         comboPanel.addThemeSelectionListener(e -> {
-            if (isUpdatingCombo) {
-                return;
-            }
-
-            final String selectedThemeTitle = (String) comboPanel.getSelectedTheme();
-            if (selectedThemeTitle == null || selectedThemeTitle.trim().isEmpty()) {
-                return;
-            }
-
-            if (ALL_THEMES.equalsIgnoreCase(selectedThemeTitle.trim())) {
+            if (isUpdatingCombo) return;
+            ThemeListItem selectedItem = comboPanel.getSelectedThemeItem();
+            if (selectedItem == null) return;
+            selectedThemeId = selectedItem.getId();
+            if (selectedThemeId == THEME_ALL_ID) {
+                selectedTheme = null;
                 buttonShow.setVisible(false);
-                updateQuestionsList(ALL_THEMES);
+                updateQuestionsList();
                 return;
             }
-
-            buttonShow.setVisible(true);
-            selectedTheme = dataManager.getThemes().stream()
-                    .filter(t -> t.getTitle().trim().equalsIgnoreCase(selectedThemeTitle.trim()))
-                    .findFirst()
-                    .orElse(null);
-
+            selectedTheme = getThemeById(selectedThemeId);
             if (selectedTheme != null) {
                 selectedThemeInfo = selectedTheme.getThemeInfo();
-                updateQuestionsList(selectedTheme.getTitle());
+                buttonShow.setVisible(true);
+                updateQuestionsList();
                 themePanel.setText(selectedTheme.getTitle());
             } else {
-                ErrorHandler.getInstance().setError("Failed to load theme.");
+                ErrorHandler.getInstance().setError(ERROR_THEME_FIND);
                 showMessage(ErrorHandler.getInstance().getError());
             }
         });
     }
 
-    /**
-     * Adds action listeners to buttons for saving, deleting, and creating new questions,
-     * and shows/hides theme information.
-     */
+    /** Sets up button handlers for saving, clearing, deleting, and toggling theme info. */
     private void initButtonActions() {
         final MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
         buttons[0].addActionListener(e -> saveQuestionFromUI());
@@ -292,20 +271,13 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         buttonShow.addActionListener(e -> toggleShowListOrInfo());
     }
 
-    /**
-     * Adds listener to question list selection to display data of selected question.
-     */
+    /** Adds a listener to respond to question selection in the list. */
     public void initQuestionListListener() {
         comboPanel.addQuestionSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 final QuestionListItem selectedItem = comboPanel.getSelectedQuestionItem();
                 if (selectedItem != null && selectedItem.getId() != -1) {
-                    final Question selectedQuestion = dataManager.getQuestionById(selectedItem.getId());
-                    if (selectedQuestion != null) {
-                        fillWithData(selectedQuestion);
-                    } else {
-                        showMessage(ERROR_LOAD_QUESTION);
-                    }
+                    fillWithData(dataManager.getQuestionById(selectedItem.getId()));
                 } else {
                     clearAllFields();
                 }
@@ -313,72 +285,50 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         });
     }
 
-    /**
-     * Saves the current question from UI fields after validation.
-     * Notifies registered listeners after successful save.
-     */
+    /** Gathers data from UI and saves it as a new or updated question. */
     public void saveQuestionFromUI() {
-        final String selectedThemeTitle = comboPanel.getSelectedTheme();
-        if (selectedThemeTitle == null || ALL_THEMES.equals(selectedThemeTitle)) {
+        if (selectedThemeId == THEME_ALL_ID) {
             showMessage(CHOOSE_A_THEME_MSG);
             return;
         }
-
-        final Theme selectedTheme = dataManager.getThemes().stream()
-                .filter(t -> t.getTitle().trim().equalsIgnoreCase(selectedThemeTitle.trim()))
-                .findFirst()
-                .orElse(null);
-
-        if (selectedTheme == null) {
+        final Theme theme = getThemeById(selectedThemeId);
+        if (theme == null) {
             showMessage(ERROR_THEME_FIND);
             return;
         }
-
-        final Question question = collectQuestionFromUI(selectedTheme);
-
+        final Question question = collectQuestionFromUI(theme);
         if (!Validator.validateQuestion(question)) {
             showMessage(ErrorHandler.getInstance().getError());
             return;
         }
-
-        final List<Question> questions = selectedTheme.getQuestions();
-        if (!questions.contains(question)) {
-            questions.add(question);
+        if (!theme.getQuestions().contains(question)) {
+            theme.getQuestions().add(question);
         }
-
-        if (!Validator.validateTheme(selectedTheme)) {
+        if (!Validator.validateTheme(theme)) {
             showMessage(ErrorHandler.getInstance().getError());
             return;
         }
-
         final String result = dataManager.saveQuestion(question);
         notifyQuestionsChanged();
-        dataManager.getAllThemes();
+        refreshThemesFromData();
         if (QUESTION_SAVED.equals(result)) {
             showMessage(QUESTION_SAVED);
-            updateQuestionsList(selectedTheme.getTitle());
+            updateQuestionsList();
         } else {
             showMessage(result);
         }
     }
 
-    /**
-     * Constructs a {@link Question} object from the current UI inputs linked to the specified theme.
-     * 
-     * @param theme The theme associated with the question
-     * @return A populated {@link Question} object representing current UI input
-     */
+    /** Builds a Question from current UI field values for the specified theme. */
     private Question collectQuestionFromUI(final Theme theme) {
         if (currentQuestionId == -1) {
             currentQuestionId = dataManager.createNewQuestionId();
         }
-
         final Question question = new Question();
         question.setId(currentQuestionId);
         question.setTitle(titlePanel.getText());
         question.setText(questionPanel.getTextInfo());
         question.setTheme(theme);
-
         List<Answer> answers = new ArrayList<>(MAX_ANSWERS);
         for (int i = 0; i < MAX_ANSWERS; i++) {
             final Answer answer = new Answer();
@@ -387,18 +337,14 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
             answers.add(answer);
         }
         question.setAnswers(answers);
-
         return question;
     }
 
-    /**
-     * Clears all input fields and resets the current question selection.
-     */
+    /** Clears all input fields and resets selection state. */
     private void clearAllFields() {
         currentQuestionId = -1;
         titlePanel.setText(EMPTY_STRING);
         questionPanel.setTextInfo(EMPTY_STRING);
-
         for (int i = 0; i < MAX_ANSWERS; i++) {
             answerPanel.getAnswerFields(i).setText(EMPTY_STRING);
             answerPanel.getAnswerCheckBoxes(i).setSelected(false);
@@ -407,26 +353,21 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         showMessage("");
     }
 
-    /**
-     * Deletes the currently selected question after user confirmation and updates the UI.
-     */
+    /** Deletes the currently selected question after user confirmation. */
     private void deleteQuestion() {
         final QuestionListItem selectedItem = comboPanel.getSelectedQuestionItem();
         if (selectedItem == null || selectedItem.getId() == -1) {
             bottomPanel.getMessagePanel().setMessageAreaText(CHOOSE_A_QUESTION_MSG);
             return;
         }
-
-        final int confirm = javax.swing.JOptionPane.showConfirmDialog(this, QUESTION_DELETE_INFORMATION,
-                DELETE_CONFIRMATION, javax.swing.JOptionPane.YES_NO_OPTION);
-
-        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        final int confirm = JOptionPane.showConfirmDialog(this, QUESTION_DELETE_INFORMATION,
+                DELETE_CONFIRMATION, JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
             final Question selectedQuestion = dataManager.getQuestionById(selectedItem.getId());
             if (selectedQuestion != null) {
                 String msg = dataManager.deleteQuestion(selectedQuestion.getId());
                 notifyQuestionsChanged();
-                dataManager.getAllThemes();
-                updateQuestionsList(selectedTheme != null ? selectedTheme.getTitle() : ALL_THEMES);
+                updateQuestionsList();
                 clearAllFields();
                 showMessage(msg);
             } else {
@@ -435,56 +376,18 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         }
     }
 
-    /**
-     * Updates the question list in the comboPanel based on the given theme title.
-     * 
-     * @param themeTitle The title of the selected theme or ALL_THEMES.
-     */
-    private void updateQuestionsList(final String themeTitle) {
-        if (ALL_THEMES.equalsIgnoreCase(themeTitle)) {
-        		dataManager.reloadAllThemeQuestions();
+    /** Refreshes the question list based on the current theme selection. */
+    private void updateQuestionsList() {
+        if (selectedThemeId == THEME_ALL_ID) {
+            dataManager.reloadAllThemeQuestions();
             comboPanel.updateQuestions(dataManager.getAllThemeQuestions().stream()
                     .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
                     .collect(Collectors.toList()));
             return;
         }
-
-        selectedTheme = dataManager.getThemes().stream().filter(t -> t.getTitle().trim().
-        			equalsIgnoreCase(themeTitle.trim())).findFirst().orElse(null);
-
-        if (selectedTheme == null) {
-            comboPanel.updateQuestions(new ArrayList<>());
-            showMessage(ERROR_THEME_FIND);
-            return;
-        }
-        final List<QuestionListItem> questionItems = dataManager.getQuestionsForTheme(selectedTheme).stream()
-                .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
-                .collect(Collectors.toList());
-
-        comboPanel.updateQuestions(questionItems);
-    }
-
-    /**
-     * Toggles between showing the theme information and the question list in the UI.
-     */
-    private void toggleShowListOrInfo() {
-        if (buttonShow.getText().contains(LABEL_THEME)) {
-            comboPanel.showInfo(selectedThemeInfo);
-            buttonShow.setText(SHOW_LIST);
-        } else {
-            buttonShow.setText(SHOW_THEME);
-            updateQuestionsList(themePanel.getText());
-        }
-    }
-
-    /**
-     * Refreshes the question list filtered by the specified theme title.
-     * 
-     * @param selectedThemeTitle The title of the selected theme.
-     */
-    public void refreshQuestionList(final String selectedThemeTitle) {
-        final Theme theme = dataManager.readThemeById(comboPanel.getSelectedIndex());
+        Theme theme = getThemeById(selectedThemeId);
         if (theme == null) {
+            comboPanel.updateQuestions(new ArrayList<>());
             showMessage(ERROR_THEME_FIND);
             return;
         }
@@ -494,64 +397,53 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
         comboPanel.updateQuestions(questionItems);
     }
 
-    /**
-     * Refreshes combo box themes and question list, temporarily disables listeners during refresh.
-     */
-    public void refreshThemes() {
-        isUpdatingCombo = true;
-        final ActionListener[] listeners = comboPanel.getComboBox().getActionListeners();
-
-        for (final ActionListener l : listeners) {
-            comboPanel.getComboBox().removeActionListener(l);
+    /** Toggles between showing theme info text and the question list. */
+    private void toggleShowListOrInfo() {
+        if (buttonShow.getText().contains(LABEL_THEME)) {
+            comboPanel.showInfo(selectedThemeInfo);
+            buttonShow.setText(SHOW_LIST);
+        } else {
+            buttonShow.setText(SHOW_THEME);
+            updateQuestionsList();
         }
-
-        final List<String> themeTitles = dataManager.getThemes().stream()
-                .map(Theme::getTitle)
-                .collect(Collectors.toList());
-
-        comboPanel.updateThemes(themeTitles);
-//
-//        final List<QuestionListItem> questionItems = dataManager.getAllQuestions().stream()
-//                .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
-//                .collect(Collectors.toList());
-//
-//        comboPanel.updateQuestions(questionItems);
-//
-//        for (final ActionListener l : listeners) {
-//            comboPanel.getComboBox().addActionListener(l);
-//        }
-        isUpdatingCombo = false;
     }
 
-    /**
-     * Displays a message in the bottom panel's message area.
-     * 
-     * @param message The message to display.
-     */
+    /** Reloads the question list for the current theme. */
+    public void refreshQuestionList() {
+        updateQuestionsList();
+    }
+
+    /** Reloads the theme list from the data manager and updates the combo box. */
+    public void refreshThemes() {
+        refreshThemesFromData();
+        comboPanel.updateThemes(themeItems);
+    }
+
+    /** Retrieves a Theme by its numeric ID. */
+    private Theme getThemeById(int id) {
+        return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+    }
+
+    /** Displays a message in the bottom panel's message area. */
     private void showMessage(final String message) {
         bottomPanel.getMessagePanel().setMessageAreaText(message);
     }
 
-    /**
-     * Registers a {@link QuestionsChangeListener} to be notified on question list changes.
-     * 
-     * @param listener The listener to register.
-     */
+    /** Registers a listener to be invoked when questions change. */
     public void setOnQuestionsChangeListener(final QuestionsChangeListener listener) {
         this.questionsChangeListener = listener;
     }
 
-    /**
-     * Notifies the registered {@link QuestionsChangeListener} about question data changes.
-     */
+    /** Invokes the registered QuestionsChangeListener, if present. */
     private void notifyQuestionsChanged() {
         if (questionsChangeListener != null) {
             questionsChangeListener.onQuestionsChanged();
         }
     }
 
-	@Override
-	public void onThemesChanged() {
-		refreshThemes();
-	}
+    /** Called when themes change anywhere in the app; reloads this panel's themes. */
+    @Override
+    public void onThemesChanged() {
+        refreshThemes();
+    }
 }
