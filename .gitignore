@@ -1,3 +1,4 @@
-.db
-.QuizData
-.FolderNames
+#Ignore my quiz Data
+QuizData
+#Ignore my folder with the folder path for the data
+Folders.
