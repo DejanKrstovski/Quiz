@@ -1,14 +1,18 @@
 package gui.mainPanels;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 
+import bussinesLogic.datenBank.AnswerDTO;
+import bussinesLogic.datenBank.PlayerAnswerDTO;
+import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.datenBank.QuizDBDataManager;
+import bussinesLogic.datenBank.ThemeDTO;
 import gui.GuiConstants;
 import gui.Panels.AnswerPanel;
 import gui.Panels.ComboBoxJListPanel;
@@ -17,364 +21,211 @@ import gui.Panels.LabelTextAreaPanel;
 import gui.Panels.SouthPanel;
 import gui.Panels.SubPanel;
 import gui.Swing.MyButton;
-import gui.Swing.MyLabel;
 import helpers.QuestionListItem;
 import helpers.ThemeListItem;
-import persistence.serialization.QuizDataManager;
-import quizlogic.Answer;
-import quizlogic.Question;
-import quizlogic.Theme;
 
-/**
- * The main quiz 'play' panel for users to practice questions interactively.
- * <p>
- * Displays questions, answers, and allows selecting questions by theme. Also
- * enables users to reveal the correct solution, check their answer, or load a
- * new question. All theme/question lookup is performed by ID via
- * {@link ThemeListItem} and {@link QuestionListItem}.
- * </p>
- *
- * <h2>Key Features</h2>
- * <ul>
- * <li>Theme selection (supports "All Themes" and per-theme).</li>
- * <li>Shows the current question, possible answers, and tracks the question
- * ID.</li>
- * <li>Allows users to check their answer and see the correct one.</li>
- * <li>Switches to a new random question in the selected theme.</li>
- * <li>Listens for changes to the theme and question pool for live
- * refreshes.</li>
- * </ul>
- *
- * <h2>Event Handling</h2>
- * <p>
- * Implements {@link QuestionsChangeListener} and {@link ThemeChangeListener} so
- * that, when the quiz data changes in other panels, this view immediately
- * reloads themes and questions.
- * </p>
- * 
- * @author
- */
 public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, ThemeChangeListener, GuiConstants {
 
-	/** Provides access to persistent quiz data and all themes/questions. */
-	private final QuizDataManager dataManager = QuizDataManager.getInstance();
+	private final QuizDBDataManager dataManager = QuizDBDataManager.getInstance();
 
 	private SubPanel centerPanel;
 	private SubPanel westPanel;
 	private SouthPanel bottomPanel;
+
 	private LabelFieldPanel themePanel;
 	private LabelFieldPanel titlePanel;
 	private LabelTextAreaPanel questionPanel;
 	private AnswerPanel answerPanel;
 
-	/**
-	 * GUI control for picking themes/questions. Holds
-	 * ThemeListItem/QuestionListItem.
-	 */
 	private ComboBoxJListPanel<ThemeListItem, QuestionListItem> comboPanel;
 
-	/** Cached list of all loaded Theme objects. */
-	private List<Theme> allThemes = new ArrayList<>();
-	/** Parallel display objects for theme combo/list—includes "All Themes". */
-	private List<ThemeListItem> themeItems = new ArrayList<>();
-	/** Currently selected theme business object in play panel. */
-	private Theme selectedTheme;
-	/** Currently displayed quiz question (for state/answer checking). */
-	private Question randomQuestion;
-	/** ID of the current quiz question (or -1 if none). */
-	private int currentQuestionId = -1;
+	private List<ThemeDTO> allThemes = new ArrayList<>();
+	private List<QuestionDTO> allQuestions = new ArrayList<>();
 
-	/**
-	 * Constructs and fully initializes the main play panel, loading the default
-	 * random question for user interaction.
-	 */
+	private QuestionDTO currentQuestion;
+
+	private ThemeDTO theme;
+
+	private int currentQuestionId;
+
 	public MainPlayPanel() {
 		super();
 		init();
-		initButtonActions();
-		fillWithData(dataManager.getRandomQuestion());
+		initListeners();
+		loadRandomQuestion();
 	}
 
-	/**
-	 * Loads quiz question data into all UI fields. If the provided question is
-	 * {@code null}, clears the panels.
-	 *
-	 * @param question The {@link Question} to populate the UI, or {@code null} to
-	 *                 clear all fields.
-	 */
-	private void fillWithData(final Question question) {
-		if (question == null) {
-			themePanel.setText(EMPTY_STRING);
-			titlePanel.setText(EMPTY_STRING);
-			questionPanel.setTextInfo(EMPTY_STRING);
-			for (int i = 0; i < MAX_ANSWERS; i++) {
-				answerPanel.getAnswerFields(i).setText(EMPTY_STRING);
-				answerPanel.getAnswerCheckBoxes(i).setSelected(false);
-			}
-			currentQuestionId = -1;
-			return;
-		}
-
-		themePanel.setText(question.getTheme().getTitle());
-		titlePanel.setText(question.getTitle());
-		questionPanel.setTextInfo(question.getText());
-		currentQuestionId = question.getId();
-
-		final List<Answer> answers = question.getAnswers();
-		final int answerCount = Math.min(answers.size(), MAX_ANSWERS);
-
-		for (int i = 0; i < answerCount; i++) {
-			answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
-		}
-		for (int i = answerCount; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerFields(i).setText("");
-			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
-		}
-	}
-
-	/**
-	 * Initializes the panel layout, subpanels, themes, and listeners.
-	 */
 	private void init() {
-		initLayout();
-		initComponents();
-		refreshThemesAndItems();
-		initComboBoxListener();
-	}
-
-	/**
-	 * Sets the main layout manager for this panel.
-	 */
-	private void initLayout() {
 		setLayout(new BorderLayout());
-	}
-
-	/**
-	 * Loads (or reloads) all themes from the backend, and maintains the parallel
-	 * ThemeListItem objects, with "All Themes" as a special entry.
-	 */
-	private void refreshThemesAndItems() {
-		allThemes = dataManager.getThemes();
-		themeItems = new ArrayList<>();
-		themeItems.add(new ThemeListItem(-1, ALL_THEMES));
-		themeItems.addAll(
-				allThemes.stream().map(t -> new ThemeListItem(t.getId(), t.getTitle())).collect(Collectors.toList()));
-	}
-
-	/**
-	 * Reloads the question list in the combo panel, based on the currently selected
-	 * theme. If no theme is selected, all questions are shown.
-	 */
-	private void refreshQuestionsList() {
-		if (selectedTheme == null || selectedTheme.getTitle().equals(ALL_THEMES)) {
-			comboPanel.updateQuestions(dataManager.getAllThemeQuestions().stream()
-					.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList()));
-		} else {
-			List<QuestionListItem> themeQuestions = dataManager.getQuestionsForTheme(selectedTheme).stream()
-					.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
-			comboPanel.updateQuestions(themeQuestions);
-		}
-	}
-
-	/**
-	 * Initializes and arranges all major subpanels visually.
-	 */
-	private void initComponents() {
-		westPanel = createWestPanel();
-		centerPanel = createCenterPanel();
+		westPanel = initWestPanel();
+		centerPanel = initCenterPanel();
 		bottomPanel = new SouthPanel(SHOW_ANSWER, SAVE_ANSWER, NEXT_QUESTION);
 
 		add(westPanel, BorderLayout.WEST);
 		add(centerPanel, BorderLayout.CENTER);
 		add(bottomPanel, BorderLayout.SOUTH);
+
+		refreshThemesFromData();
+		updateQuestionList();
 	}
 
-	private SubPanel createWestPanel() {
+	private SubPanel initWestPanel() {
 		SubPanel panel = new SubPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setPreferredSize(WEST_PANEL_DIMENSIONS);
 		panel.setMaximumSize(WEST_PANEL_DIMENSIONS);
 
-		panel.add(createThemePanel());
-		panel.add(createTitlePanel());
-		panel.add(createQuestionPanel());
-		panel.add(createPossibleAnswerPanel());
-		panel.add(createAnswerPanel());
-		panel.setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
-
-		return panel;
-	}
-
-	/** @return Theme field editor/subpanel */
-	private LabelFieldPanel createThemePanel() {
 		themePanel = new LabelFieldPanel(LABEL_THEME, EMPTY_STRING);
 		themePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		return themePanel;
-	}
-
-	/** @return Title field editor/subpanel */
-	private LabelFieldPanel createTitlePanel() {
 		titlePanel = new LabelFieldPanel(LABEL_TITLE, EMPTY_STRING);
 		titlePanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		return titlePanel;
-	}
 
-	/** @return Question text area editor/subpanel */
-	private LabelTextAreaPanel createQuestionPanel() {
 		questionPanel = new LabelTextAreaPanel(LABEL_QUESTION);
 		questionPanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-		return questionPanel;
-	}
 
-	/** @return Panel showing answer labels/headers */
-	private SubPanel createPossibleAnswerPanel() {
-		SubPanel panel = new SubPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
-		panel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
+		answerPanel = new AnswerPanel();
+		
+		panel.add(themePanel);
+		panel.add(titlePanel);
+		panel.add(questionPanel);
+		panel.add(answerPanel);
 
-		MyLabel possibleAnswerLabel = new MyLabel(LABEL_POSSIBLE_ANSWERS);
-		MyLabel correctAnswerLabel = new MyLabel(CORRECTNESS);
-
-		panel.add(possibleAnswerLabel);
-		panel.add(Box.createHorizontalGlue());
-		panel.add(correctAnswerLabel);
+		panel.setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
 		return panel;
 	}
 
-	/** @return Read-only answer entry panel for answer buttons/checkboxes */
-	private SubPanel createAnswerPanel() {
-		answerPanel = new AnswerPanel();
-		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerFields(i).setEditable(false);
-		}
-		return answerPanel;
-	}
-
-	/**
-	 * Initializes and returns the central subpanel with the theme/question
-	 * selector.
-	 * 
-	 * @return The center panel with theme and question list.
-	 */
-	private SubPanel createCenterPanel() {
+	private SubPanel initCenterPanel() {
 		SubPanel panel = new SubPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
-		panel.add(createComboPanel());
+		panel.add(initComboPanel());
 		return panel;
 	}
 
-	/**
-	 * Creates the combobox/list control for selecting themes and questions.
-	 * 
-	 * @return The populated ComboBoxJListPanel for this quiz view.
-	 */
-	private ComboBoxJListPanel<ThemeListItem, QuestionListItem> createComboPanel() {
-		refreshThemesAndItems();
-		final List<QuestionListItem> questionItems = dataManager.getAllThemeQuestions().stream()
+	private ComboBoxJListPanel<ThemeListItem, QuestionListItem> initComboPanel() {
+		refreshThemesFromData();
+		allQuestions = dataManager.getAllQuestions();
+		List<QuestionListItem> questionItems = allQuestions.stream()
 				.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
-
-		comboPanel = new ComboBoxJListPanel<>(themeItems, questionItems);
+		comboPanel = new ComboBoxJListPanel<>(buildThemeItems(), questionItems);
 		return comboPanel;
 	}
 
-	/**
-	 * Called to reload all themes and questions from persistent storage and update
-	 * the theme and question combo/list with new data. This should be called when
-	 * themes or questions in the app have changed.
-	 */
-	public void refreshThemes() {
-		refreshThemesAndItems();
-		comboPanel.updateThemes(themeItems);
-		refreshQuestionsList();
-	}
-
-	/**
-	 * Sets up the combo box to load and display questions for the selected theme.
-	 * If the user selects "All Themes", all questions are shown at random.
-	 */
-	private void initComboBoxListener() {
+	private void initListeners() {
 		comboPanel.addThemeSelectionListener(e -> {
-			ThemeListItem selectedThemeItem = comboPanel.getSelectedThemeItem();
-			if (selectedThemeItem == null) {
-				selectedTheme = null;
-				themePanel.setText(EMPTY_STRING);
-				comboPanel.updateQuestions(new ArrayList<>());
+			ThemeListItem selectedItem = comboPanel.getSelectedThemeItem();
+			System.out.println(selectedItem);
+			if (selectedItem == null)
+				return;
+
+			if (selectedItem.getId() == NO_SELECTION) {
+				currentQuestion = null;
+				updateQuestionList();
 				return;
 			}
-			themePanel.setText(selectedThemeItem.getTitle());
-			selectedTheme = getThemeById(selectedThemeItem.getId());
-			refreshQuestionsList();
-			nextQuestion(selectedTheme);
+			updateQuestionList();
 		});
+
+		MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
+		MyButton btnShowSolution = buttons[0];
+		MyButton btnCheckAnswer = buttons[1];
+		MyButton btnNextQuestion = buttons[2];
+
+		btnShowSolution.setMnemonic(KeyEvent.VK_S);
+		btnCheckAnswer.setMnemonic(KeyEvent.VK_C);
+		btnNextQuestion.setMnemonic(KeyEvent.VK_N);
+
+		btnShowSolution.addActionListener(e -> showAnswer());
+		btnCheckAnswer.addActionListener(e -> savePlayerAnswers());
+		btnNextQuestion.addActionListener(e -> loadRandomQuestion());
 	}
 
-	/**
-	 * Loads a new random question for the current theme (or across all themes), and
-	 * fills the content fields. If the theme has no questions, displays an error.
-	 * 
-	 * @param theme The selected theme, or {@code null} for "all themes".
-	 */
-	private void nextQuestion(Theme theme) {
-		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
-			answerPanel.getAnswerCheckBoxes(i).setEnabled(true);
-		}
-
-		Random r = new Random();
-		randomQuestion = null;
-
-		if (theme == null || theme.getTitle().equals(ALL_THEMES)) {
-			randomQuestion = dataManager.getRandomQuestion();
-			comboPanel.updateQuestions(dataManager.getAllThemeQuestions().stream()
-					.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList()));
-			showMessage(EMPTY_STRING);
-		} else {
-			List<Question> themeQuestions = dataManager.getQuestionsForTheme(theme);
-			if (themeQuestions == null || themeQuestions.isEmpty()) {
-				showMessage(ERROR_NO_QUESTIONS_FOR_THEME);
-				fillWithData(null);
-				return;
+	private void fillWithData(QuestionDTO question) {
+		clearAllFields();
+		if (question != null) {
+			currentQuestionId = question.getId();
+			System.out.println("Current is : "+ currentQuestionId + " And actuell is: " + question.getId());
+			ThemeDTO theme = getThemeById(question.getThemeId());
+			themePanel.setText(theme != null ? theme.getTitle() : "");
+			titlePanel.setText(question.getTitle());
+			questionPanel.setQuestionText(question.getText());
+			questionPanel.getQuestionTextArea().setEditable(false);
+			List<AnswerDTO> answers = dataManager.getAnswersFor(question);
+			for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
+				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
 			}
-			showMessage(EMPTY_STRING);
-			int randomIndex = r.nextInt(themeQuestions.size());
-			randomQuestion = themeQuestions.get(randomIndex);
-			List<QuestionListItem> themeQuestionsAsList = themeQuestions.stream()
-					.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
-			comboPanel.updateQuestions(themeQuestionsAsList);
+			for (int i = 0; i <  MAX_ANSWERS; i++)
+			answerPanel.getAnswerFields(i).setEditable(false);
 		}
-		fillWithData(randomQuestion);
 	}
 
-	/**
-	 * Adds listeners to quiz control buttons: "Show Answer", "Save Answer", "Next
-	 * Question". Handles answer checking, solution display, and cycling to new
-	 * questions.
-	 */
-	private void initButtonActions() {
-		final MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
-		buttons[0].addActionListener(e -> showAnswer());
-		buttons[1].addActionListener(e -> saveAnswer());
-		buttons[2].addActionListener(e -> nextQuestion(selectedTheme));
+	private void clearAllFields() {
+		themePanel.setText("");
+		titlePanel.setText("");
+		questionPanel.setQuestionText("");
+		for (int i = 0; i < MAX_ANSWERS; i++) {
+			answerPanel.getAnswerFields(i).setText("");
+			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
+		}
 	}
 
-	/**
-	 * Shows which answers are correct for the current question. Displays this
-	 * information in the questions list panel and disables answer input.
-	 */
+	private void refreshThemesFromData() {
+		allThemes = dataManager.getAllThemes();
+	}
+
+	private List<ThemeListItem> buildThemeItems() {
+		List<ThemeListItem> items = new ArrayList<>();
+		items.add(new ThemeListItem(NO_SELECTION, ALL_THEMES));
+		items.addAll(
+				allThemes.stream().map(t -> new ThemeListItem(t.getId(), t.getTitle())).collect(Collectors.toList()));
+		return items;
+	}
+
+	private void updateQuestionList() {
+	    ThemeListItem selectedTheme = comboPanel.getSelectedThemeItem();
+	    List<QuestionListItem> newQuestions;
+
+	    if (selectedTheme == null || selectedTheme.getId() == NO_SELECTION) {
+	        newQuestions = dataManager.getAllQuestions().stream()
+	                .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+	                .collect(Collectors.toList());
+	    } else {
+	        theme = getThemeById(selectedTheme.getId());
+	        if (theme != null) {
+	            newQuestions = dataManager.getQuestionsFor(theme).stream()
+	                    .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+	                    .collect(Collectors.toList());
+	        } else {
+	            newQuestions = new ArrayList<>();
+	        }
+	    }
+
+	    if (currentQuestion == null || 
+	    	    newQuestions.stream().noneMatch(q -> q.getId() == currentQuestion.getId())) {
+	    	    fillWithData(null); // no match found, reset
+	    	}
+	    comboPanel.updateQuestions(newQuestions);
+	}
+
+
+	private ThemeDTO getThemeById(int id) {
+		return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+	}
+
 	private void showAnswer() {
 		String displayedTitle = titlePanel.getText();
 		if (displayedTitle == null || displayedTitle.isEmpty()) {
 			showMessage(QUESTION_NOT_SELECTED);
 			return;
 		}
-		Question currentQuestion = findQuestionById(currentQuestionId);
+		QuestionDTO currentQuestion = findQuestionById(currentQuestionId);
 		if (currentQuestion == null) {
 			showMessage(QUESTION_NOT_FOUND);
 			return;
 		}
+		currentQuestion.setAnswers(dataManager.getAnswersFor(currentQuestion));
 		List<Integer> correctIndices = new ArrayList<>();
-		List<Answer> answers = currentQuestion.getAnswers();
+		List<AnswerDTO> answers = currentQuestion.getAnswers();
 		for (int i = 0; i < answers.size(); i++) {
 			if (answers.get(i).isCorrect()) {
 				correctIndices.add(i + 1);
@@ -396,101 +247,81 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		}
 	}
 
-	/**
-	 * Checks if the user's answer matches the actual correct answer(s) for the
-	 * current question, and displays immediate feedback with message and disables
-	 * answer input.
-	 */
-	private void saveAnswer() {
-		boolean[] userSelections = new boolean[MAX_ANSWERS];
-		boolean isAnySelected = false;
-		for (int i = 0; i < MAX_ANSWERS; i++) {
-			userSelections[i] = answerPanel.getAnswerCheckBoxes(i).isSelected();
-			if (userSelections[i]) {
-				isAnySelected = true;
-			}
-		}
-		if (currentQuestionId == -1) {
-			showMessage(QUESTION_NOT_SELECTED);
-			return;
-		}
-		Question currentQuestion = findQuestionById(currentQuestionId);
-		if (currentQuestion == null) {
-			showMessage(QUESTION_NOT_FOUND);
-			return;
-		}
+	private void savePlayerAnswers() {
+	    if (currentQuestion == null) {
+	        showMessage("Es ist keine Frage geladen.");
+	        return;
+	    }
+	    List<AnswerDTO> possibleAnswers = dataManager.getAnswersFor(currentQuestion);
+	    boolean anySelected = false;
+	    for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
+	        if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+	            anySelected = true;
+	            break;
+	        }
+	    }
+	    if (!anySelected) {
+	        showMessage("Bitte mindestens eine Antwort auswählen.");
+	        return;
+	    }
+	    for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
+	        if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+	            AnswerDTO answer = possibleAnswers.get(i);
 
-		List<Answer> answers = currentQuestion.getAnswers();
-		boolean allCorrect = true;
-		boolean hasCorrectSelection = false;
-		for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
-			boolean isCorrect = answers.get(i).isCorrect();
-			boolean userChecked = userSelections[i];
-			if (userChecked && isCorrect) {
-				hasCorrectSelection = true;
-			} else if (userChecked && !isCorrect) {
-				allCorrect = false;
-			} else if (!userChecked && isCorrect) {
-				allCorrect = false;
-			}
-		}
+	            PlayerAnswerDTO playerAnswer = new PlayerAnswerDTO();
+	            playerAnswer.setQuestionId(currentQuestion.getId());
+	            playerAnswer.setAnswerId(answer.getId());
+	            playerAnswer.setSelected(true);
 
-		if (!isAnySelected) {
-			showMessage(CHOOSE_AN_ANSWER);
-		} else if (allCorrect && hasCorrectSelection) {
-			showMessage(CORRECT_ANSWER);
+	            String result = dataManager.savePlayerAnswer(playerAnswer);
+	            if (result != null) {
+	                showMessage("Fehler: " + result);
+	                return;
+	            }
+	        }
+	    }
+	    for (int i = 0; i < MAX_ANSWERS; i++) {
+	        answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
+	    }
+	    showMessage("Antwort gespeichert");
+	}
+
+	private void loadRandomQuestion() {
+		updateQuestionList();
+		for(int i=0; i<MAX_ANSWERS; i++) {
+			answerPanel.getAnswerCheckBoxes(i).setEnabled(true);
 		}
-		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
+		if (!allQuestions.isEmpty()) {
+			if (theme == null || comboPanel.getSelectedThemeItem().getId() == NO_SELECTION) {
+				currentQuestion = dataManager.getRandomQuestion();
+			} else {
+				currentQuestion = dataManager.getRandomQuestionFor(theme);
+				System.out.println(theme);
+			}
+			fillWithData(currentQuestion);
 		}
 	}
 
-	/**
-	 * Returns a question object for the requested id, searching all loaded
-	 * questions.
-	 *
-	 * @param questionId The unique question id to find.
-	 * @return The {@link Question} matching the id, or {@code null} if not found.
-	 */
-	private Question findQuestionById(int questionId) {
-		return dataManager.getAllThemeQuestions().stream().filter(q -> q.getId() == questionId).findFirst()
+	private QuestionDTO findQuestionById(int questionId) {
+		return dataManager.getAllQuestions().stream().filter(q -> q.getId() == questionId).findFirst()
 				.orElse(null);
 	}
-
-	/**
-	 * Returns a theme object for the requested id, searching all loaded themes.
-	 *
-	 * @param id The unique theme id to find.
-	 * @return The {@link Theme} matching the id, or {@code null} if not found.
-	 */
-	private Theme getThemeById(int id) {
-		return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
-	}
-
-	/**
-	 * Called whenever question data has changed (from another part of the app).
-	 * Triggers a full reload of themes/questions to reflect the latest state.
-	 */
+	
 	@Override
 	public void onQuestionsChanged() {
-		refreshThemes();
+		allQuestions = dataManager.getAllQuestions();
+		updateQuestionList();
 	}
 
-	/**
-	 * Called whenever theme data has changed (from another part of the app).
-	 * Triggers a full reload of themes/questions to reflect the latest state.
-	 */
 	@Override
 	public void onThemesChanged() {
-		refreshThemes();
+		refreshThemesFromData();
+		comboPanel.updateThemes(buildThemeItems());
+		updateQuestionList();
 	}
-
-	/**
-	 * Displays a message to the user in the play panel's message area.
-	 * 
-	 * @param message Message to display (never {@code null})
-	 */
-	private void showMessage(String message) {
+	
+	/** Displays a message in the bottom panel's message area. */
+	private void showMessage(final String message) {
 		bottomPanel.getMessagePanel().setMessageAreaText(message);
 	}
 }

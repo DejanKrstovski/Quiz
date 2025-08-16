@@ -1,6 +1,7 @@
 package gui.mainPanels;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,6 +10,10 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 
+import bussinesLogic.ErrorHandler;
+import bussinesLogic.datenBank.QuizDBDataManager;
+import bussinesLogic.datenBank.ThemeDTO;
+import bussinesLogic.serialization.QuizDataManager_serial;
 import gui.GuiConstants;
 import gui.Panels.LabelFieldPanel;
 import gui.Panels.LabelJListPanel;
@@ -18,9 +23,6 @@ import gui.Panels.SubPanel;
 import gui.Swing.MyButton;
 import gui.Swing.MyLabel;
 import helpers.ThemeListItem;
-import persistence.serialization.QuizDataManager;
-import quizlogic.ErrorHandler;
-import quizlogic.Theme;
 
 /**
  * Panel for displaying, creating, updating, and deleting quiz themes.
@@ -44,7 +46,7 @@ import quizlogic.Theme;
  * <ul>
  *   <li>Duplicate title checking for both add and edit</li>
  *   <li>Selection restore after save</li>
- *   <li>Consistent refresh from {@link QuizDataManager} after modifications</li>
+ *   <li>Consistent refresh from {@link QuizDataManager_serial} after modifications</li>
  * </ul>
  * 
  * @author 
@@ -58,15 +60,16 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     private LabelTextAreaPanel labelTextPanel;
     private MyLabel titleLabel;
 
-    private List<Theme> allThemes = new ArrayList<>();
+    private List<ThemeDTO> allThemes = new ArrayList<>();
     private List<ThemeListItem> themeItems = new ArrayList<>();
 
     private int selectedThemeId = NO_SELECTION;
 
     private LabelJListPanel<ThemeListItem> labelJListPanel;
     private final List<ThemeChangeListener> themeChangeListeners = new ArrayList<>();
+    private final QuizDBDataManager dbManager = QuizDBDataManager.getInstance();
+//  private final QuizDataManager_serial dataManager = QuizDataManager_serial.getInstance();
 
-    private final QuizDataManager dataManager = QuizDataManager.getInstance();
 
     /**
      * Registers a new listener to be notified when themes change.
@@ -135,7 +138,6 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
 
     /** @return Center panel with scrollable theme list. */
     private SubPanel initCenterPanel() {
-        dataManager.getAllThemesAndQuestions();
         refreshThemesAndItems();
         labelJListPanel = new LabelJListPanel<>(LABEL_THEMES, themeItems);
         labelJListPanel.clearSelectionListeners();
@@ -150,7 +152,7 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
 
     /** Reloads theme data from manager and rebuilds ThemeListItem list. */
     private void refreshThemesAndItems() {
-        allThemes = dataManager.getThemes();
+        allThemes = dbManager.getAllThemes();
         themeItems = allThemes.stream()
                               .map(theme -> new ThemeListItem(theme.getId(), theme.getTitle()))
                               .collect(Collectors.toList());
@@ -162,13 +164,15 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
      */
     private void updateSelection() {
         ThemeListItem selectedItem = labelJListPanel.getList().getSelectedValue();
+        
         if (selectedItem != null) {
             selectedThemeId = selectedItem.getId();
-            Theme selectedTheme = getThemeById(selectedThemeId);
+            System.out.println(selectedItem +" id: " + selectedThemeId);
+            ThemeDTO selectedTheme = getThemeById(selectedThemeId);
             if (selectedTheme != null) {
                 titleLabel.setText(LABEL_THEME_INFORMATION);
                 labelFieldPanel.setText(selectedTheme.getTitle());
-                labelTextPanel.setTextInfo(selectedTheme.getThemeInfo());
+                labelTextPanel.setQuestionText(selectedTheme.getText());
             } else {
                 resetFields();
                 selectedThemeId = NO_SELECTION;
@@ -184,7 +188,9 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     private void initButtonsActions() {
         MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
         buttons[0].addActionListener(e -> deleteTheme());
+        buttons[0].setMnemonic(KeyEvent.VK_L); // Alt+S activates the button
         buttons[1].addActionListener(e -> saveTheme());
+        buttons[1].setMnemonic(KeyEvent.VK_S); // Alt+S activates the button
         buttons[2].addActionListener(e -> reset());
     }
 
@@ -203,19 +209,19 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
         }
 
         if (selectedThemeId == NO_SELECTION) {
-            Theme theme = new Theme();
-            theme.setId(dataManager.createNewThemeId());
-            theme.setThemeInfo(info);
+            ThemeDTO theme = new ThemeDTO();
             theme.setTitle(title);
-            dataManager.saveTheme(theme);
+            theme.setText(info);
+            dbManager.saveTheme(theme);
             selectedThemeId = theme.getId(); // Select the new theme after saving
             showMessage(ErrorHandler.getInstance().getInfo());
         } else {
-            Theme selectedTheme = getThemeById(selectedThemeId);
+            ThemeDTO selectedTheme = getThemeById(selectedThemeId);
             if (selectedTheme != null) {
                 selectedTheme.setTitle(title);
-                selectedTheme.setThemeInfo(info);
-                dataManager.saveTheme(selectedTheme);
+                selectedTheme.setText(info);
+                String result = dbManager.saveTheme(selectedTheme);
+                System.out.println(result);
                 showMessage(THEME_SUCCESFULLY_UPDATED);
             }
         }
@@ -233,9 +239,9 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
         int confirm = JOptionPane.showConfirmDialog(this, THEME_DELETE_INFORMATION, DELETE_CONFIRMATION,
                                                     JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            Theme toDelete = getThemeById(selectedThemeId);
+            ThemeDTO toDelete = getThemeById(selectedThemeId);
             if (toDelete != null) {
-                String error = dataManager.deleteTheme(toDelete);
+                String error = dbManager.deleteTheme(toDelete);
                 showMessage(error);
                 selectedThemeId = NO_SELECTION;
                 reset();
@@ -258,11 +264,11 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     /** Clears theme title and info text fields. */
     private void resetFields() {
         labelFieldPanel.setText(EMPTY_STRING);
-        labelTextPanel.setTextInfo(EMPTY_STRING);
+        labelTextPanel.setQuestionText(EMPTY_STRING);
     }
 
     /** @return Theme object by ID, or null if not found. */
-    private Theme getThemeById(int id) {
+    private ThemeDTO getThemeById(int id) {
         return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
     }
 

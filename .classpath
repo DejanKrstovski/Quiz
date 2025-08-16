@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="C:/Users/DejanKrstovski/OneDrive - BBQ - Baumann Bildung und Qualifizierung GmbH/Desktop/Install/Java JAR/JUnit/junit-4.13.2.jar"/>
 	<classpathentry kind="lib" path="C:/Users/DejanKrstovski/OneDrive - BBQ - Baumann Bildung und Qualifizierung GmbH/Desktop/Install/Java JAR/JUnit/junit-platform-console-standalone-1.10.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/DejanKrstovski/OneDrive - BBQ - Baumann Bildung und Qualifizierung GmbH/Desktop/Install/Java JAR/JUnit/mockito-core-5.18.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/DejanKrstovski/OneDrive - BBQ - Baumann Bildung und Qualifizierung GmbH/Desktop/Install/Java JAR/Lombok/lombok.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

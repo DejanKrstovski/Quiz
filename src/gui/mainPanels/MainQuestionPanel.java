@@ -1,6 +1,7 @@
 package gui.mainPanels;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,6 +10,12 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 
+import bussinesLogic.ErrorHandler;
+import bussinesLogic.Validator;
+import bussinesLogic.datenBank.AnswerDTO;
+import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.datenBank.QuizDBDataManager;
+import bussinesLogic.datenBank.ThemeDTO;
 import gui.GuiConstants;
 import gui.Panels.AnswerPanel;
 import gui.Panels.ComboBoxJListPanel;
@@ -20,12 +27,6 @@ import gui.Swing.MyButton;
 import gui.Swing.MyLabel;
 import helpers.QuestionListItem;
 import helpers.ThemeListItem;
-import persistence.serialization.QuizDataManager;
-import quizlogic.Answer;
-import quizlogic.ErrorHandler;
-import quizlogic.Question;
-import quizlogic.Theme;
-import quizlogic.Validator;
 
 /**
  * Panel for managing quiz questions, supporting creation, editing, and
@@ -54,10 +55,11 @@ import quizlogic.Validator;
  * @author
  */
 public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, GuiConstants {
-
+	
 	/** Access point for quiz themes and questions. */
-	private final QuizDataManager dataManager = QuizDataManager.getInstance();
-
+//	private final QuizDataManager_serial dataManager = QuizDataManager_serial.getInstance();
+	private final QuizDBDataManager dataManager = QuizDBDataManager.getInstance();
+	private final ErrorHandler errorHandler = ErrorHandler.getInstance();
 	private MyButton buttonShow;
 	private SubPanel centerPanel;
 	private SubPanel westPanel;
@@ -72,10 +74,12 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	private int currentQuestionId = NO_SELECTION;
 	private int selectedThemeId = NO_SELECTION;
 
-	private List<Theme> allThemes = new ArrayList<>();
+	private ThemeDTO selectedTheme;
+	private List<ThemeDTO> allThemes = new ArrayList<>();
 	private List<ThemeListItem> themeItems = new ArrayList<>();
-	private Theme selectedTheme;
 
+	private List<QuestionDTO> allQuestions;
+	private List<QuestionListItem> questionItems;
 	private QuestionsChangeListener questionsChangeListener;
 
 	/**
@@ -93,14 +97,15 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	 * 
 	 * @param question Question to display, or null to clear.
 	 */
-	public void fillWithData(final Question question) {
+	public void fillWithData(final QuestionDTO question) {
 		clearAllFields();
 		if (question != null) {
 			currentQuestionId = question.getId();
-			themePanel.setText(question.getTheme().getTitle());
+			String themeTitel = getThemeById(question.getThemeId()).getTitle();
+			themePanel.setText(themeTitel);
 			titlePanel.setText(question.getTitle());
-			questionPanel.setTextInfo(question.getText());
-			final List<Answer> answers = question.getAnswers();
+			questionPanel.setQuestionText(question.getText());
+			final List<AnswerDTO> answers = dataManager.getAnswersFor(question);
 			for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
 				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
 				answerPanel.getAnswerCheckBoxes(i).setSelected(answers.get(i).isCorrect());
@@ -219,18 +224,20 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	/** @return ComboBoxJListPanel initialized with themes and all questions. */
 	private ComboBoxJListPanel<ThemeListItem, QuestionListItem> initComboPanel() {
 		refreshThemesFromData();
-		final List<QuestionListItem> questionItems = dataManager.getAllThemeQuestions().stream()
-				.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
+		allQuestions = dataManager.getAllQuestions();
+		questionItems = allQuestions.stream().map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+				.collect(Collectors.toList());
 		comboPanel = new ComboBoxJListPanel<>(themeItems, questionItems);
 		return comboPanel;
 	}
 
 	/** Loads themes and builds ThemeListItem objects (including ALL_THEMES). */
 	private void refreshThemesFromData() {
-		allThemes = dataManager.getThemes();
+		allThemes = dataManager.getAllThemes();
 		themeItems = new ArrayList<>();
 		themeItems.add(new ThemeListItem(NO_SELECTION, ALL_THEMES));
-		themeItems.addAll(allThemes.stream().map(t -> new ThemeListItem(t.getId(), t.getTitle())).collect(Collectors.toList()));
+		themeItems.addAll(
+				allThemes.stream().map(t -> new ThemeListItem(t.getId(), t.getTitle())).collect(Collectors.toList()));
 	}
 
 	/** Handles theme selection changes in the combo box. */
@@ -248,12 +255,12 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			}
 			selectedTheme = getThemeById(selectedThemeId);
 			if (selectedTheme != null) {
-				selectedThemeInfo = selectedTheme.getThemeInfo();
+				selectedThemeInfo = selectedTheme.getText();
 				buttonShow.setVisible(true);
 				updateQuestionsList();
 				themePanel.setText(selectedTheme.getTitle());
 			} else {
-				ErrorHandler.getInstance().setError(ERROR_THEME_NOT_FOUND);
+				errorHandler.setError(ERROR_THEME_NOT_FOUND);
 				showMessage(ErrorHandler.getInstance().getError());
 			}
 		});
@@ -266,6 +273,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	private void initButtonActions() {
 		final MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
 		buttons[0].addActionListener(e -> saveQuestionFromUI());
+		buttons[0].setMnemonic(KeyEvent.VK_S); // Alt+S activates the button
 		buttons[1].addActionListener(e -> clearAllFields());
 		buttons[2].addActionListener(e -> deleteQuestion());
 		buttonShow.addActionListener(e -> toggleShowListOrInfo());
@@ -276,13 +284,16 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 		comboPanel.addQuestionSelectionListener(e -> {
 			if (!e.getValueIsAdjusting()) {
 				final QuestionListItem selectedItem = comboPanel.getSelectedQuestionItem();
-				
+
 				if (selectedItem == null) {
-	                return; // ignore event when nothing is actually selected
-	            }
+					return; // ignore event when nothing is actually selected
+				}
 				System.out.println("Clicked: " + selectedItem + " (id=" + selectedItem.getId() + ")");
 				if (selectedItem != null && selectedItem.getId() != -1) {
-					fillWithData(dataManager.getQuestionById(selectedItem.getId()));
+					QuestionDTO question = new QuestionDTO();
+					question = getQuestionById(selectedItem.getId());
+					question.setAnswers(dataManager.getAnswersFor(question));
+					fillWithData(question);
 				} else {
 					clearAllFields();
 				}
@@ -296,24 +307,25 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			showMessage(CHOOSE_A_THEME_MSG);
 			return;
 		}
-		System.out.println("Id od tema: " + selectedThemeId);
-		final Theme theme = getThemeById(selectedThemeId);
+		final ThemeDTO theme = getThemeById(selectedThemeId);
 		if (theme == null) {
 			showMessage(ERROR_THEME_NOT_FOUND);
 			return;
 		}
-		final Question question = collectQuestionFromUI(theme);
-		if (!Validator.validateQuestion(question)) {
-			showMessage(ErrorHandler.getInstance().getError());
-			return;
-		}
-		if (!Validator.validateTheme(theme)) {
+		final QuestionDTO question = collectQuestionFromUI(theme);
+		if (!Validator.validateQuestion(question) 
+				|| !Validator.validateAnswers(question.getAnswers())
+				|| !Validator.validateTheme(theme)) {
 			showMessage(ErrorHandler.getInstance().getError());
 			return;
 		}
 		final String result = dataManager.saveQuestion(question);
+		
+		questionItems = dataManager.getQuestionsFor(theme).stream()
+		        .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+		        .collect(Collectors.toList());
+		comboPanel.updateQuestions(questionItems);
 		notifyQuestionsChanged();
-		refreshThemesFromData();
 		if (QUESTION_SAVED.equals(result)) {
 			showMessage(QUESTION_SAVED);
 			updateQuestionsList();
@@ -323,21 +335,25 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	}
 
 	/** Builds a Question from current UI field values for the specified theme. */
-	private Question collectQuestionFromUI(final Theme theme) {
-		if (currentQuestionId == -1 || !theme.equals(selectedTheme)) {
-			currentQuestionId = dataManager.createNewQuestionId();
-		}
-		System.out.println("Momentalen id od Prasanje: " + currentQuestionId);
-		final Question question = new Question();
+	private QuestionDTO collectQuestionFromUI(final ThemeDTO theme) {
+		final QuestionDTO question = new QuestionDTO();
 		question.setId(currentQuestionId);
 		question.setTitle(titlePanel.getText());
 		question.setText(questionPanel.getTextInfo());
-		question.setTheme(theme);
-		List<Answer> answers = new ArrayList<>(MAX_ANSWERS);
+		question.setThemeId(theme.getId());
+		List<AnswerDTO> answers = new ArrayList<>();
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			final Answer answer = new Answer(answerPanel.getAnswerFields(i).getText(),
-					answerPanel.getAnswerCheckBoxes(i).isSelected());
-			answers.add(answer);
+			final AnswerDTO answer = new AnswerDTO();
+			String text = answerPanel.getAnswerFields(i).getText();
+			boolean isCorrect = answerPanel.getAnswerCheckBoxes(i).isSelected();
+			System.out.println(answer);
+			if(!text.isEmpty() || !text.isBlank()) {
+				answer.setText(text);
+				answer.setCorrect(isCorrect);
+				answer.setQuestionId(currentQuestionId);
+				answers.add(answer);
+			}
+			
 		}
 		question.setAnswers(answers);
 		return question;
@@ -345,9 +361,9 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 
 	/** Clears all input fields and resets selection state. */
 	private void clearAllFields() {
-		currentQuestionId = -1;
+		currentQuestionId = NO_SELECTION;
 		titlePanel.setText(EMPTY_STRING);
-		questionPanel.setTextInfo(EMPTY_STRING);
+		questionPanel.setQuestionText(EMPTY_STRING);
 		for (int i = 0; i < MAX_ANSWERS; i++) {
 			answerPanel.getAnswerFields(i).setText(EMPTY_STRING);
 			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
@@ -365,9 +381,9 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 		final int confirm = JOptionPane.showConfirmDialog(this, QUESTION_DELETE_INFORMATION, DELETE_CONFIRMATION,
 				JOptionPane.YES_NO_OPTION);
 		if (confirm == JOptionPane.YES_OPTION) {
-			final Question selectedQuestion = dataManager.getQuestionById(selectedItem.getId());
+			final QuestionDTO selectedQuestion = getQuestionById(selectedItem.getId());
 			if (selectedQuestion != null) {
-				String msg = dataManager.deleteQuestion(selectedQuestion.getId());
+				String msg = dataManager.deleteQuestion(selectedQuestion);
 				notifyQuestionsChanged();
 				updateQuestionsList();
 				clearAllFields();
@@ -380,21 +396,29 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 
 	/** Refreshes the question list based on the current theme selection. */
 	private void updateQuestionsList() {
-		if (selectedThemeId == NO_SELECTION) {
-			comboPanel.updateQuestions(dataManager.getAllThemeQuestions().stream()
-					.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList()));
-			return;
-		}
-		Theme theme = getThemeById(selectedThemeId);
-		if (theme == null) {
-			comboPanel.updateQuestions(new ArrayList<>());
-			showMessage(ERROR_THEME_NOT_FOUND);
-			return;
-		}
-		final List<QuestionListItem> questionItems = dataManager.getQuestionsForTheme(theme).stream()
-				.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
-		comboPanel.updateQuestions(questionItems);
+	    allQuestions = dataManager.getAllQuestions();
+
+	    if (selectedThemeId == NO_SELECTION) {
+	        questionItems = allQuestions.stream()
+	            .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+	            .collect(Collectors.toList());
+	        comboPanel.updateQuestions(questionItems);
+	        return;
+	    }
+
+	    ThemeDTO theme = getThemeById(selectedThemeId);
+	    if (theme == null) {
+	        comboPanel.updateQuestions(new ArrayList<>());
+	        showMessage(ERROR_THEME_NOT_FOUND);
+	        return;
+	    }
+
+	    List<QuestionListItem> filteredItems = dataManager.getQuestionsFor(theme).stream()
+	        .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+	        .collect(Collectors.toList());
+	    comboPanel.updateQuestions(filteredItems);
 	}
+
 
 	/** Toggles between showing theme info text and the question list. */
 	private void toggleShowListOrInfo() {
@@ -419,7 +443,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	}
 
 	/** Retrieves a Theme by its numeric ID. */
-	private Theme getThemeById(int id) {
+	private ThemeDTO getThemeById(int id) {
 		return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
 	}
 
@@ -446,5 +470,10 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	@Override
 	public void onThemesChanged() {
 		refreshThemes();
+	}
+
+	/** @return Question object by ID, or null if not found. */
+	private QuestionDTO getQuestionById(int id) {
+		return allQuestions.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
 	}
 }

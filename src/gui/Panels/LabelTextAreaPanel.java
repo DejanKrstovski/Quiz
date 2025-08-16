@@ -94,7 +94,7 @@ public class LabelTextAreaPanel extends SubPanel implements GuiConstants {
 	 *
 	 * @param text the new text content
 	 */
-	public void setTextInfo(String text) {
+	public void setQuestionText(String text) {
 		this.questionTextArea.setText(text);
 	}
 }

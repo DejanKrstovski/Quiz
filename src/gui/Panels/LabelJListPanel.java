@@ -1,7 +1,9 @@
 package gui.Panels;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.List;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -43,12 +45,13 @@ public class LabelJListPanel<T> extends SubPanel implements GuiConstants {
      * @param listItems the initial items to populate the list (non-null)
      */
     public LabelJListPanel(String labelText, List<T> listItems) {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         label = new MyLabel(labelText);
         label.setFont(FONT_TITLE); 
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(label);
-        add(Box.createVerticalStrut(10));
 
+        add(Box.createVerticalStrut(10));
         listModel = new DefaultListModel<>();
         for (T item : listItems) {
             listModel.addElement(item);
@@ -60,7 +63,7 @@ public class LabelJListPanel<T> extends SubPanel implements GuiConstants {
         scrollPane = new MyScrollPane(list);
         scrollPane.setPreferredSize(new Dimension(500, 300));
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(scrollPane);
         setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
     }

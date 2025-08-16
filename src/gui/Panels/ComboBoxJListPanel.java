@@ -29,10 +29,13 @@ public class ComboBoxJListPanel<T, U> extends SubPanel {
 
     /** Combo box for selecting themes (e.g. ThemeListItem). */
     private final MyComboBox<T> comboBox;
+    
     /** Model backing the question or info list. */
     private DefaultListModel<U> listModel;
+    
     /** List for displaying questions/info items. */
     private final JList<U> list;
+    
     /** Scroll pane for the list. */
     private final MyScrollPane scrollPane;
 
@@ -135,10 +138,10 @@ public class ComboBoxJListPanel<T, U> extends SubPanel {
 	public void showInfo(String info) {
         listModel.clear();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 6; i++) {
             listModel.addElement((U) new QuestionListItem(-1, "\n"));
         }
-        listModel.addElement((U) new QuestionListItem(-1, "========= Theme Info ========="));
+        listModel.addElement((U) new QuestionListItem(-1, "========= Thema Info ========="));
         for (String line : info.split("\n")) {
             listModel.addElement((U) new QuestionListItem(-1, line));
         }

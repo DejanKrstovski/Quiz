@@ -11,6 +11,7 @@ import gui.mainPanels.MainPlayPanel;
 import gui.mainPanels.MainQuestionPanel;
 import gui.mainPanels.MainStatisticPanel;
 import gui.mainPanels.MainThemePanel;
+import persistence.mariaDB.createDB.DBCreator;
 
 /**
  * The {@code QuizApp} class initializes and displays the main GUI window for
@@ -128,6 +129,8 @@ public class QuizApp extends JFrame implements GuiConstants {
 	 * @param args command-line arguments (not used)
 	 */
 	public static void main(String[] args) {
+		DBCreator.createDB();
 		new QuizApp();
+		
 	}
 }

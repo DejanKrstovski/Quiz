@@ -2,6 +2,8 @@ package persistence;
 
 import java.io.Serializable;
 
+import bussinesLogic.DataTransportObject;
+
 /**
  * A basic data access object (DAO) class that implements {@link Serializable}.
  * <p>
@@ -15,13 +17,27 @@ import java.io.Serializable;
  * 
  * @author 
  */
-public class DataAccessObject implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public abstract class DataAccessObject{
 
     /** Unique identifier for this data object. Defaults to -1 to indicate uninitialized state. */
-    private int id = -1;
+    protected int id = -1;
+    
+	public DataAccessObject(int id) {
+		super();
+		this.id = id;
+	}
 
+	public DataAccessObject() {
+		super();
+	}
+	
+	/**
+	 * Converts a DataAccesObject to a DataAccesObject.<br>
+	 * Evry class that extens this class have to implement this method. 
+	 * @return
+	 */
+	public abstract DataTransportObject toDTO();
+	
     /**
      * Returns the identifier of this data object.
      *

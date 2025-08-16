@@ -45,7 +45,7 @@ public interface GuiConstants {
     /**
      * Width of the main window.
      */
-    public static final int FRAME_WIDTH = 900;
+    public static final int FRAME_WIDTH = 1100;
     
     /**
      * Height of the main window.
@@ -116,6 +116,7 @@ public interface GuiConstants {
     public static final String QUESTION_DELETING_NOT_POSSIBLE = "Die Frage konnte nicht gelöscht werden.";
     public static final String QUESTION_DELETE_INFORMATION = "Möchten Sie diese Frage wirklich löschen?";
     public static final String QUESTION_SAVED = "Frage erfolgreich gespeichert.";
+    public static final String QUESTION_DELETED = "Frage gelöscht";
     public static final String ERROR_LOAD_QUESTION = "Ausgewählte Frage konnte nicht geladen werden.";
     public static final String ERROR_NO_QUESTIONS_FOR_THEME = "Keine Fragen für das Thema vorhanden.";
     public static final String CHOOSE_AN_ANSWER = "Bitte eine Antwort auswählen!";
@@ -130,7 +131,7 @@ public interface GuiConstants {
     public static final Dimension TABS_LABEL_SIZE = new Dimension(150, 25);
     public static final Dimension CHECKBOX_SIZE = new Dimension(40, 40);
     public static final Dimension LABEL_SIZE = new Dimension(100, 20);
-    public static final Dimension WEST_PANEL_DIMENSIONS = new Dimension(430, 800);
+    public static final Dimension WEST_PANEL_DIMENSIONS = new Dimension(730, 800);
 
     // Borders and spacing for layout purposes
     public static final Border DISTANCE_BETWEEN_LABEL_TABS = BorderFactory.createEmptyBorder(10, 10, 10, 10);

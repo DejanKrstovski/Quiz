@@ -8,17 +8,17 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import persistence.serialization.QuizDataManager;
-import quizlogic.Theme;
+import bussinesLogic.serialization.QuizDataManager_serial;
+import bussinesLogic.serialization.Theme;
 
 public class MainThemePanelTest {
 
-    private QuizDataManager dataManager;
+    private QuizDataManager_serial dataManager;
 
     @BeforeEach
     public void setup() {
         // Use instance or mock as needed
-        dataManager = QuizDataManager.getInstance();
+        dataManager = QuizDataManager_serial.getInstance();
         // Optionally clear or reset theme storage for isolation
     }
     
