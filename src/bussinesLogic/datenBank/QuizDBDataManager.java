@@ -25,12 +25,12 @@ public class QuizDBDataManager implements QuizDataInterfaceDB {
 
     @Override
     public List<ThemeDTO> getAllThemes() {
-        return dbManager.getAllThemes(); // cached in DBManager
+        return dbManager.getAllThemes();
     }
 
     @Override
     public List<QuestionDTO> getAllQuestions() {
-        return dbManager.getAllQuestions(); // cached in DBManager
+        return dbManager.getAllQuestions();
     }
 
     @Override

@@ -5,11 +5,11 @@ import java.util.List;
 import bussinesLogic.datenBank.AnswerDTO;
 import bussinesLogic.datenBank.QuestionDTO;
 import bussinesLogic.datenBank.ThemeDTO;
-import bussinesLogic.serialization.Question;
+import bussinesLogic.serialization.QuestionDTO;
 
 /**
- * Utility class to validate Quiz domain model objects such as {@link Theme} and
- * {@link Question}.
+ * Utility class to validate Quiz domain model objects such as {@link ThemeDTO} and
+ * {@link QuestionDTO}.
  * <p>
  * Provides static methods to check basic validity rules, e.g. non-null fields,
  * minimum number of answers, correct answer requirement, and more.
@@ -29,7 +29,7 @@ public class Validator {
 	static ErrorHandler errorHandler = ErrorHandler.getInstance();
 
 	/**
-	 * Validates the specified {@link Theme}.
+	 * Validates the specified {@link ThemeDTO}.
 	 *
 	 * Criteria:
 	 * <ul>
@@ -62,7 +62,7 @@ public class Validator {
 	}
 
 	/**
-	 * Validates a single {@link Question}.
+	 * Validates a single {@link QuestionDTO}.
 	 * <p>
 	 * Ensures that the question is not null and has a non-empty title and question
 	 * text. Checks that at least two answers have non-empty text and that at least

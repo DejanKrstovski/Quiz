@@ -131,7 +131,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		MyButton btnCheckAnswer = buttons[1];
 		MyButton btnNextQuestion = buttons[2];
 
-		btnShowSolution.setMnemonic(KeyEvent.VK_S);
+		btnShowSolution.setMnemonic(KeyEvent.VK_A);
 		btnCheckAnswer.setMnemonic(KeyEvent.VK_C);
 		btnNextQuestion.setMnemonic(KeyEvent.VK_N);
 
@@ -231,7 +231,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 				correctIndices.add(i + 1);
 			}
 		}
-		String correctText;
+		String correctText = "";
 		if (correctIndices.isEmpty()) {
 			correctText = NO_RIGHT_ANSWER_FOUND;
 		} else {
@@ -296,7 +296,6 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 				currentQuestion = dataManager.getRandomQuestion();
 			} else {
 				currentQuestion = dataManager.getRandomQuestionFor(theme);
-				System.out.println(theme);
 			}
 			fillWithData(currentQuestion);
 		}

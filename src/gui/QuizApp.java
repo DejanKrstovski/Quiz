@@ -45,7 +45,7 @@ public class QuizApp extends JFrame implements GuiConstants {
 	private final MainPlayPanel playPanel = new MainPlayPanel();
 	
 	/** Panel for statistic for the quiz. */
-	private final MainStatisticPanel statisticPanel = new MainStatisticPanel();
+//	private final MainStatisticPanel statisticPanel = new MainStatisticPanel();
 
 	/** The tabbed pane containing the main sections of the application. */
 	private MyTabPane tabPane;
@@ -96,7 +96,7 @@ public class QuizApp extends JFrame implements GuiConstants {
 		tabPane.addTab(TAB_THEMES, themePanel);
 		tabPane.addTab(TAB_QUESTIONS, questionPanel);
 		tabPane.addTab(TAB_PLAY, playPanel);
-		tabPane.addTab(TAB_STATISTIC, statisticPanel);
+//		tabPane.addTab(TAB_STATISTIC, statisticPanel);
 
 		themePanel.addOnThemeChangeListener(questionPanel);
 		themePanel.addOnThemeChangeListener(playPanel);

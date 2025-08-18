@@ -3,9 +3,9 @@ package helpers;
 import java.util.ArrayList;
 import java.util.List;
 
-import bussinesLogic.serialization.Answer;
-import bussinesLogic.serialization.Question;
-import bussinesLogic.serialization.Theme;
+import bussinesLogic.datenBank.AnswerDTO;
+import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.datenBank.ThemeDTO;
 
 /**
  * Interface defining the data access operations for the quiz application.
@@ -20,37 +20,37 @@ import bussinesLogic.serialization.Theme;
 public interface QuizDataInterfaceSerial {
 
     /**
-     * Retrieves a random {@link Question} from all available questions.
+     * Retrieves a random {@link QuestionDTO} from all available questions.
      * 
      * @return a randomly selected {@code Question}, or {@code null} if no questions exist
      */
-    public Question getRandomQuestion();
+    public QuestionDTO getRandomQuestion();
 
     /**
-     * Retrieves a list of all available quiz {@link Theme}s.
+     * Retrieves a list of all available quiz {@link ThemeDTO}s.
      * 
      * @return an {@link ArrayList} containing all themes; empty list if none found
      */
     public void getAllThemesAndQuestions();
 
     /**
-     * Retrieves all {@link Question}s associated with the specified {@link Theme}.
+     * Retrieves all {@link QuestionDTO}s associated with the specified {@link ThemeDTO}.
      * 
      * @param theme the theme for which to fetch questions; must not be null
      * @return an {@link ArrayList} of questions belonging to the given theme; empty list if none
      */
-    public List<Question> getQuestionsForTheme(Theme theme);
+    public List<QuestionDTO> getQuestionsForTheme(ThemeDTO theme);
 
     /**
-     * Retrieves all {@link Answer}s associated with the specified {@link Question}.
+     * Retrieves all {@link AnswerDTO}s associated with the specified {@link QuestionDTO}.
      * 
      * @param q the question for which to fetch answers; must not be null
      * @return an {@link ArrayList} of answers belonging to the given question; empty list if none
      */
-    public List<Answer> getAnswersForQuestion(Question q);
+    public List<AnswerDTO> getAnswersForQuestion(QuestionDTO q);
 
     /**
-     * Saves or updates the specified {@link Theme} to the data store.
+     * Saves or updates the specified {@link ThemeDTO} to the data store.
      * <p>
      * This operation may create a new entry or overwrite an existing one identified by the theme's ID.
      * </p>
@@ -58,18 +58,18 @@ public interface QuizDataInterfaceSerial {
      * @param theme the theme to save; must not be null
      * @return a status message indicating success or failure of the operation
      */
-    public String saveTheme(Theme theme);
+    public String saveTheme(ThemeDTO theme);
 
     /**
-     * Deletes the specified {@link Theme} and all associated questions and answers from the data store.
+     * Deletes the specified {@link ThemeDTO} and all associated questions and answers from the data store.
      * 
      * @param theme the theme to delete; must not be null
      * @return a status message indicating success or failure of the deletion
      */
-    public String deleteTheme(Theme theme);
+    public String deleteTheme(ThemeDTO theme);
 
     /**
-     * Saves or updates the specified {@link Question} to the data store.
+     * Saves or updates the specified {@link QuestionDTO} to the data store.
      * <p>
      * This operation may create a new entry or overwrite an existing one identified by the question's ID.
      * </p>
@@ -77,10 +77,10 @@ public interface QuizDataInterfaceSerial {
      * @param q the question to save; must not be null
      * @return a status message indicating success or failure of the operation
      */
-    public String saveQuestion(Question q);
+    public String saveQuestion(QuestionDTO q);
 
     /**
-     * Deletes the {@link Question} identified by the given ID from the data store.
+     * Deletes the {@link QuestionDTO} identified by the given ID from the data store.
      * <p>
      * Note that answers associated with this question should also be deleted accordingly.
      * </p>

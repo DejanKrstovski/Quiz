@@ -11,7 +11,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.junit.platform.console.options.Theme;
+import org.mockito.stubbing.Answer;
+
 import bussinesLogic.ErrorHandler;
+import bussinesLogic.datenBank.AnswerDTO;
+import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.datenBank.ThemeDTO;
 import gui.GuiConstants;
 import helpers.QuizDataInterfaceSerial;
 import persistence.Constants;
@@ -47,16 +53,16 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	private static QuizDataManager_serial instance = null;
 
 	/** Cached list of all themes loaded from data store. */
-	private List<Theme> themes;
+	private List<ThemeDTO> themes;
 
 	/** Cached list of all questions across all themes. */
-	private List<Question> allThemeQuestions;
+	private List<QuestionDTO> allThemeQuestions;
 
 	/** List of questions chosen for a specific theme. */
-	private List<Question> chosenThemeQuestions;
+	private List<QuestionDTO> chosenThemeQuestions;
 
 	/** List of answers related to a particular question. */
-	private List<Answer> answers;
+	private List<AnswerDTO> answers;
 
 	ErrorHandler errorHandler = ErrorHandler.getInstance();
 
@@ -81,7 +87,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalStateException if no questions are loaded
 	 */
 	@Override
-	public Question getRandomQuestion() {
+	public QuestionDTO getRandomQuestion() {
 		if (allThemeQuestions == null || allThemeQuestions.isEmpty()) {
 			errorHandler.setError(NO_QUESTIONS_EXISTS);
 			return null;
@@ -100,7 +106,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * 
 	 * @return list of all {@link Theme} objects; empty list if none found
 	 */
-	public List<Theme> getAllThemesTest() {
+	public List<ThemeDTO> getAllThemesTest() {
 		File folder = new File(TEST_FOLDER);
 		themes = new ArrayList<>();
 		if (!folder.exists()) {
@@ -114,7 +120,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 		if (files != null) {
 			for (File file : files) {
 				try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-					Theme theme = (Theme) ois.readObject();
+					ThemeDTO theme = (ThemeDTO) ois.readObject();
 					themes.add(theme);
 				} catch (Exception e) {
 					errorHandler.setError(ERROR_LOADING_FILE + file.getName() + ": " + e.getMessage());
@@ -140,7 +146,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 		if (files != null) {
 			for (File file : files) {
 				try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-					Theme theme = (Theme) ois.readObject();
+					ThemeDTO theme = (ThemeDTO) ois.readObject();
 					themes.add(theme);
 				} catch (Exception e) {
 					errorHandler.setError(ERROR_LOADING_FILE + file.getName() + ": " + e.getMessage());
@@ -163,8 +169,8 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 			allThemeQuestions.clear();
 		}
 
-		for (Theme theme : themes) {
-			List<Question> themeQuestions = theme.getQuestions();
+		for (ThemeDTO theme : themes) {
+			List<QuestionDTO> themeQuestions = theme.getQuestions();
 			if (themeQuestions != null) {
 				allThemeQuestions.addAll(themeQuestions);
 			}
@@ -180,18 +186,17 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalArgumentException if theme is null
 	 */
 	@Override
-	public List<Question> getQuestionsForTheme(Theme theme) {
+	public List<QuestionDTO> getQuestionsForTheme(ThemeDTO theme) {
 		chosenThemeQuestions = new ArrayList<>();
-		for (Theme t : themes) {
+		for (ThemeDTO t : themes) {
 			if (t.getId() == theme.getId()) {
-				List<Question> themeQuestions = t.getQuestions();
+				List<QuestionDTO> themeQuestions = t.getQuestions();
 				if (themeQuestions != null) {
 					chosenThemeQuestions.addAll(themeQuestions);
 				}
 				break;
 			}
 		}
-		System.out.println("Prasanja za tema: " + theme.getTitle());
 		return chosenThemeQuestions;
 	}
 
@@ -204,11 +209,11 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalArgumentException if question is null
 	 */
 	@Override
-	public List<Answer> getAnswersForQuestion(Question question) {
+	public List<AnswerDTO> getAnswersForQuestion(QuestionDTO question) {
 		answers = null;
 		System.out.println("Odgovori za prasanje " + question.getTitle());
-		for (Theme theme : themes) {
-			List<Question> themeQuestions = theme.getQuestions();
+		for (ThemeDTO theme : themes) {
+			List<QuestionDTO> themeQuestions = theme.getQuestions();
 			if (themeQuestions != null && themeQuestions.contains(question)) {
 				int index = themeQuestions.indexOf(question);
 				answers = themeQuestions.get(index).getAnswers();
@@ -224,7 +229,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @param theme
 	 * @return message for success or error
 	 */
-	public String saveThemeTests(Theme theme) {
+	public String saveThemeTests(ThemeDTO theme) {
 		try {
 			if (theme.getId() < 0) {
 				theme.setId(createNewThemeId());
@@ -249,7 +254,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalArgumentException if theme is null
 	 */
 	@Override
-	public String saveTheme(Theme theme) {
+	public String saveTheme(ThemeDTO theme) {
 		try {
 			if (theme.getId() < 0) {
 				theme.setId(createNewThemeId());
@@ -274,7 +279,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalArgumentException if theme is null
 	 */
 	@Override
-	public String deleteTheme(Theme theme) {
+	public String deleteTheme(ThemeDTO theme) {
 		int id = theme.getId();
 		File folder = new File(DATA_FOLDER);
 		File[] files = folder.listFiles((dir, name) -> name.startsWith(THEME + id));
@@ -306,14 +311,14 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @throws IllegalArgumentException if question is null
 	 */
 	@Override
-	public String saveQuestion(Question question) {
-		Theme questionTheme = question.getTheme();
+	public String saveQuestion(QuestionDTO question) {
+		ThemeDTO questionTheme = question.getTheme();
 		if (questionTheme == null) {
 			return QUESTION_ASSIGN_THEME;
 		}
 
-		Theme storedTheme = null;
-		for (Theme theme : themes) {
+		ThemeDTO storedTheme = null;
+		for (ThemeDTO theme : themes) {
 			if (theme.getId() == questionTheme.getId()) {
 				storedTheme = theme;
 				break;
@@ -324,7 +329,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 			return ERROR_THEME_FROM_QUESTION;
 		}
 
-		List<Question> questions = storedTheme.getQuestions();
+		List<QuestionDTO> questions = storedTheme.getQuestions();
 		if (questions == null) {
 			questions = new ArrayList<>();
 			storedTheme.setQuestions(questions);
@@ -364,12 +369,12 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 */
 	@Override
 	public String deleteQuestion(int id) {
-		for (Theme theme : themes) {
-			List<Question> themeQuestions = theme.getQuestions();
+		for (ThemeDTO theme : themes) {
+			List<QuestionDTO> themeQuestions = theme.getQuestions();
 			if (themeQuestions != null) {
-				Iterator<Question> iterator = themeQuestions.iterator();
+				Iterator<QuestionDTO> iterator = themeQuestions.iterator();
 				while (iterator.hasNext()) {
-					Question question = iterator.next();
+					QuestionDTO question = iterator.next();
 					if (question.getId() == id) {
 						iterator.remove();
 						saveTheme(theme);
@@ -387,7 +392,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @param id the ID of the theme to read
 	 * @return the {@link Theme} object if found, null otherwise
 	 */
-	public Theme readThemeById(int id) {
+	public ThemeDTO readThemeById(int id) {
 		File file = new File(THEME_FILE_PREFIX + id);
 		if (!file.exists()) {
 			ErrorHandler.getInstance().setError(FILE_FOR_THEME_WITH_ID + id + DOES_NOT_EXISTS);
@@ -395,7 +400,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 		}
 
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-			return (Theme) ois.readObject();
+			return (ThemeDTO) ois.readObject();
 		} catch (ClassNotFoundException | IOException e) {
 			ErrorHandler.getInstance().setError(ERROR_BY_LOADING_THEME + e.getMessage());
 			return null;
@@ -456,10 +461,10 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 */
 	public int createNewQuestionId() {
 		int maxId = 0;
-		for (Theme theme : themes) {
-			List<Question> questions = theme.getQuestions();
+		for (ThemeDTO theme : themes) {
+			List<QuestionDTO> questions = theme.getQuestions();
 			if (questions != null) {
-				for (Question question : questions) {
+				for (QuestionDTO question : questions) {
 					if (question.getId() > maxId) {
 						maxId = question.getId();
 					}
@@ -475,8 +480,8 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 	 * @param id the ID of the question to find
 	 * @return the {@link Question} if found, or null if not found
 	 */
-	public Question getQuestionById(int id) {
-		for (Question question : allThemeQuestions) {
+	public QuestionDTO getQuestionById(int id) {
+		for (QuestionDTO question : allThemeQuestions) {
 			if (question.getId() == id) {
 				return question;
 			}
@@ -484,7 +489,7 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 		return null;
 	}
 	
-	public List<Theme> getThemes() {
+	public List<ThemeDTO> getThemes() {
 		return themes;
 	}
 
@@ -492,11 +497,11 @@ public class QuizDataManager_serial implements QuizDataInterfaceSerial, Constant
 		getAllThemesAndQuestions();
 	}
 	
-	public void setThemes(List<Theme> themes) {
+	public void setThemes(List<ThemeDTO> themes) {
 		this.themes = themes;
 	}
 
-	public List<Question> getAllThemeQuestions() {
+	public List<QuestionDTO> getAllThemeQuestions() {
 		return allThemeQuestions;
 	}	
 }

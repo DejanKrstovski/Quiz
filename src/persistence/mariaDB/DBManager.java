@@ -25,13 +25,11 @@ public class DBManager {
 	private static DBManager instance;
 	private Connection connection = DBConnection.getConnection();
 
-	// Cache lists
 	private List<ThemeDTO> themeCache;
 	private List<QuestionDTO> questionCache;
 	private List<AnswerDTO> answerCache;
 
 	private DBManager() {
-		// preload all at startup
 		refreshThemes();
 		refreshQuestions();
 		refreshAnswers();
@@ -130,7 +128,6 @@ public class DBManager {
 		return answerCache;
 	}
 
-	// -------- Save & Delete with automatic cache refresh --------
 	public String saveTheme(ThemeDTO theme) {
 		String result = saveDAO(new ThemeDAO(theme));
 		if (result == null)
@@ -153,7 +150,7 @@ public class DBManager {
 		String result = saveDAO(dao);
 
 		if (result != null) {
-			return result; // error while saving question
+			return result;
 		}
 		int questionId = dao.getId();
 		question.setId(questionId);
