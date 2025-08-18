@@ -4,3 +4,5 @@ QuizData/
 Folders.java
 #Ignore my tests
 tests/
+#Bin Folder
+bin/
