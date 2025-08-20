@@ -17,15 +17,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
-import bussinesLogic.datenBank.PlayerAnswerDTO;
-import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.AnswerDTO;
+import bussinesLogic.PlayerAnswerDTO;
+import bussinesLogic.QuestionDTO;
+import bussinesLogic.ThemeDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
-import bussinesLogic.datenBank.ThemeDTO;
 import gui.GuiConstants;
 import gui.Panels.ComboBoxJListPanel;
 import gui.Panels.SubPanel;
-import gui.Swing.MyButton;
-import gui.Swing.MyLabel;
 import helpers.ThemeListItem;
 
 public class MainStatisticPanel extends SubPanel implements QuestionsChangeListener, ThemeChangeListener, GuiConstants {
@@ -34,12 +33,8 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 
 	// UI
 	private SubPanel topFilterPanel; // Filter + Aktionen
-	private SubPanel kpiPanel; // KPI-Kacheln
 	private SubPanel contentPanel; // Tabellen
 	private ComboBoxJListPanel<ThemeListItem, Object> themeFilter; // nutze generisch
-	private MyButton btnRefresh;
-	private MyButton btnExportCsv;
-	private MyButton btnReset;
 
 	// Tabellen
 	private JTable tableByTheme;
@@ -48,6 +43,7 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 	// Daten
 	private List<ThemeDTO> allThemes = new ArrayList<>();
 	private List<QuestionDTO> allQuestions = new ArrayList<>();
+	private List<AnswerDTO> allAnswers = new ArrayList<>();
 	private List<PlayerAnswerDTO> allPlayerAnswers = new ArrayList<>();
 
 	public MainStatisticPanel() {
@@ -61,11 +57,9 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 		setLayout(new BorderLayout());
 
 		topFilterPanel = initFilterPanel();
-		kpiPanel = initKpiPanel();
 		contentPanel = initContentPanel();
 
 		add(topFilterPanel, BorderLayout.NORTH);
-		add(kpiPanel, BorderLayout.WEST);
 		add(contentPanel, BorderLayout.CENTER);
 	}
 
@@ -79,43 +73,11 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 		themeFilter = new ComboBoxJListPanel<>(buildThemeItems(), new ArrayList<>());
 		themeFilter.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 
-		// Buttons
-		btnRefresh = new MyButton("Aktualisieren");
-		btnExportCsv = new MyButton("Export CSV");
-		btnReset = new MyButton("Alle statistiks löschen");
-		btnRefresh.addActionListener(e -> {
-			resetStatistics();
-		});
-		btnRefresh.addActionListener(e -> {
-			loadData();
-			updateStatisticsUI();
-		});
-
-		btnExportCsv.addActionListener(e -> exportStatsToCsv());
-
 		p.add(themeFilter);
-		p.add(btnRefresh);
-		p.add(btnExportCsv);
-		p.add(btnReset);
+
 		return p;
 	}
 
-	private void resetStatistics() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private SubPanel initKpiPanel() {
-		SubPanel p = new SubPanel();
-		p.setLayout(new GridLayout(4, 1, 8, 8));
-		p.setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
-		// Platzhalter; Labels werden in updateKpis() gesetzt
-		p.add(new MyLabel("Themes: -"));
-		p.add(new MyLabel("Fragen: -"));
-		p.add(new MyLabel("Beantwortet: -"));
-		p.add(new MyLabel("Genauigkeit: -"));
-		return p;
-	}
 
 	private SubPanel initContentPanel() {
 		SubPanel p = new SubPanel();
@@ -134,40 +96,12 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 	private void loadData() {
 		allThemes = dataManager.getAllThemes();
 		allQuestions = dataManager.getAllQuestions();
-		// Diese Methode musst du im DataManager ergänzen:
-		// allPlayerAnswers = dataManager.getAllPlayerAnswers();
-		// Fallback: falls nicht verfügbar, über Theme/Question iterieren und eigene
-		// Aggregation bauen.
+		allAnswers = dataManager.getAllAnswers();
+		allPlayerAnswers = dataManager.getAllPlayerAnswers();
 	}
 
 	private void updateStatisticsUI() {
-		updateKpis();
 		updateThemeTable();
-//        updateHardestQuestionsTable();
-	}
-
-	private void updateKpis() {
-		int themeCount = allThemes.size();
-		int questionCount = allQuestions.size();
-
-		// Korrektheit berechnen:
-		// Annahme: PlayerAnswerDTO.selected==true speichert die Auswahl;
-		// für Korrektheit brauchst du AnswerDTO.isCorrect() zu den gespeicherten
-		// answerId.
-		// Baue dir hier eine Hilfsmethode computeGlobalAccuracy()
-		double accuracy = computeGlobalAccuracy();
-
-		int answeredCount = countAnsweredQuestionsDistinct();
-
-		// kpiPanel neu befüllen
-		kpiPanel.removeAll();
-		kpiPanel.setLayout(new GridLayout(4, 1, 8, 8));
-		kpiPanel.add(new MyLabel("Themes: " + themeCount));
-		kpiPanel.add(new MyLabel("Fragen: " + questionCount));
-		kpiPanel.add(new MyLabel("Beantwortet: " + answeredCount));
-		kpiPanel.add(new MyLabel(String.format("Genauigkeit: %.1f%%", accuracy * 100)));
-		kpiPanel.revalidate();
-		kpiPanel.repaint();
 	}
 
 	private void updateThemeTable() {
@@ -185,23 +119,6 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 		tableByTheme.setModel(new javax.swing.table.DefaultTableModel(rows.toArray(new Object[0][]), cols));
 	}
 
-//	private void updateHardestQuestionsTable() {
-//	    // rows ist List<Object[]>, jede Zeile: { title:String, id:int, acc:double }
-//	    var rows = allQuestions.stream()
-//	        .map(q -> new Object[] { q.getTitle(), q.getId(), computeAccuracyForQuestion(q) })
-//	        .sorted(Comparator.comparingDouble(o -> (double) o[1])) // nach Accuracy aufsteigend
-//	        .limit(5)
-//	        // jetzt korrekt entpacken und nur die zwei Spalten für die Tabelle bauen
-//	        .map(o -> new Object[] { (String) o, String.format("%.1f%%", ((double) o[1]) * 100) })
-//	        .collect(java.util.stream.Collectors.toList());
-//
-//	    String[] cols2 = { "Frage", "Genauigkeit" };
-//	    Object[][] data2 = rows.toArray(new Object[]);
-//	    tableHardestQuestions.setModel(new javax.swing.table.DefaultTableModel(data2, cols2));
-//	}
-
-	// ---- Hilfsfunktionen: Accuracy und Counts ----
-
 	private double computeGlobalAccuracy() {
 		// Idee:
 		// Sammle alle PlayerAnswers, mappen auf Answer.isCorrect für die ausgewählten
@@ -213,8 +130,8 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 	}
 
 	private int countAnsweredQuestionsDistinct() {
-		// Anzahl unterschiedlicher questionId in allPlayerAnswers
-		return 0;
+		allPlayerAnswers = dataManager.getAllPlayerAnswers();
+		return allPlayerAnswers.size();
 	}
 
 	private int countAnsweredQuestionsDistinctForTheme(int themeId, List<QuestionDTO> questionsOfTheme) {
@@ -225,15 +142,6 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 
 	private double computeAccuracyForQuestions(List<QuestionDTO> questions) {
 		// Mittelwert der Frage-Accuracies über eine Menge Fragen
-		return 0.0;
-	}
-
-	private double computeAccuracyForQuestion(QuestionDTO q) {
-		// Hole alle PlayerAnswers zu q, vergleiche mit Answer.isCorrect
-		// Accuracy-Definition klar festlegen:
-		// - Single-Choice: 1 wenn ausgewählte Antwort korrekt, sonst 0
-		// - Multiple-Choice: Anzahl korrekt markierter / Anzahl markierter? Oder
-		// strenger „alles richtig oder 0“?
 		return 0.0;
 	}
 
@@ -248,13 +156,10 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 	@Override
 	public void onThemesChanged() {
 		refreshThemesFromData();
-		// Theme-Filter neu setzen
 		themeFilter.updateThemes(buildThemeItems());
 		loadData();
 		updateStatisticsUI();
 	}
-
-	// ---- Utilities ----
 
 	private void refreshThemesFromData() {
 		allThemes = dataManager.getAllThemes();
@@ -266,11 +171,5 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
 		items.addAll(
 				allThemes.stream().map(t -> new ThemeListItem(t.getId(), t.getTitle())).collect(Collectors.toList()));
 		return items;
-	}
-
-	private void exportStatsToCsv() {
-		// Implementiere Export der aktuellen Tabellen in CSV (z.B. über StringBuilder
-		// und JFileChooser)
-		// Optional: DataManager-Methode zum Schreiben auf Platte.
 	}
 }

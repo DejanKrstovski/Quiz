@@ -93,14 +93,16 @@ public class QuizApp extends JFrame implements GuiConstants {
 	private void setupTabs() {
 		tabPane = new MyTabPane();
 
-		tabPane.addTab(TAB_THEMES, themePanel);
-		tabPane.addTab(TAB_QUESTIONS, questionPanel);
-		tabPane.addTab(TAB_PLAY, playPanel);
+//		tabPane.addTab(TAB_THEMES, themePanel);
+//		tabPane.addTab(TAB_QUESTIONS, questionPanel);
+//		tabPane.addTab(TAB_PLAY, playPanel);
 		tabPane.addTab(TAB_STATISTIC, statisticPanel);
 
 		themePanel.addOnThemeChangeListener(questionPanel);
 		themePanel.addOnThemeChangeListener(playPanel);
-		questionPanel.setOnQuestionsChangeListener(playPanel);
+		themePanel.addOnThemeChangeListener(statisticPanel);
+		questionPanel.addOnQuestionsChangeListener(playPanel);
+		questionPanel.addOnQuestionsChangeListener(statisticPanel);
 		
 		add(tabPane);
 	}

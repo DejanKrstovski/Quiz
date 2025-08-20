@@ -3,15 +3,15 @@ package persistence.mariaDB.entity;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import bussinesLogic.AnswerDTO;
 import bussinesLogic.DataTransportObject;
-import bussinesLogic.datenBank.AnswerDTO;
 import persistence.mariaDB.MariaAccessObject;
 
 public class AnswerDAO extends MariaAccessObject {
 
 	private final String SQL_SELECT = "SELECT * from QUIZ.ANSWER;";
 	private final String SQL_INSERT = "INSERT INTO QUIZ.ANSWER (TEXT, ISCORRECT, QUESTIONID) VALUES (?, ?, ?);";
-	private final String SQL_UPDATE = "UPDATE QUIZ.ANSWER SET TEXT = ?, ISCORRECT = ?, QUESTIONID = ? WHERE (ID = ?));";
+	private final String SQL_UPDATE = "UPDATE QUIZ.ANSWER SET TEXT = ?, ISCORRECT = ?, QUESTIONID = ? WHERE (ID = ?);";
 	private final String SQL_DELETE = "DELETE FROM QUIZ.ANSWER WHERE (QUESTIONID = ?)";
 
 	/** The text label of this answer; may be {@code null} or empty. */
@@ -110,7 +110,7 @@ public class AnswerDAO extends MariaAccessObject {
             stmt.setString(1, text);
             stmt.setBoolean(2, isCorrect);
             stmt.setInt(3, questionId);
-            stmt.setInt(4, getId());
+            stmt.setInt(4, id);
         } catch (SQLException e) {
             e.printStackTrace();
         }

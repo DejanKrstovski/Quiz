@@ -2,11 +2,6 @@ package bussinesLogic;
 
 import java.util.List;
 
-import bussinesLogic.datenBank.AnswerDTO;
-import bussinesLogic.datenBank.QuestionDTO;
-import bussinesLogic.datenBank.ThemeDTO;
-import bussinesLogic.serialization.QuestionDTO;
-
 /**
  * Utility class to validate Quiz domain model objects such as {@link ThemeDTO} and
  * {@link QuestionDTO}.

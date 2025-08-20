@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import bussinesLogic.AnswerDTO;
 import bussinesLogic.DataTransportObject;
-import bussinesLogic.datenBank.AnswerDTO;
-import bussinesLogic.datenBank.PlayerAnswerDTO;
-import bussinesLogic.datenBank.QuestionDTO;
-import bussinesLogic.datenBank.ThemeDTO;
+import bussinesLogic.PlayerAnswerDTO;
+import bussinesLogic.QuestionDTO;
+import bussinesLogic.ThemeDTO;
 import persistence.mariaDB.createDB.DBConnection;
 import persistence.mariaDB.entity.AnswerDAO;
 import persistence.mariaDB.entity.PlayerAnswerDAO;
@@ -28,11 +28,13 @@ public class DBManager {
 	private List<ThemeDTO> themeCache;
 	private List<QuestionDTO> questionCache;
 	private List<AnswerDTO> answerCache;
+	private List<PlayerAnswerDTO> playerAnswerCache;
 
 	private DBManager() {
 		refreshThemes();
 		refreshQuestions();
 		refreshAnswers();
+		refreshPlayerAnswers();
 	}
 
 	public static DBManager getInstance() {
@@ -114,8 +116,12 @@ public class DBManager {
 		answerCache = getAllFromDAO(AnswerDAO.class, "Answer").stream().map(a -> (AnswerDTO) a)
 				.collect(Collectors.toList());
 	}
+	
+	private void refreshPlayerAnswers() {
+		playerAnswerCache = getAllFromDAO(PlayerAnswerDAO.class, "PlayerAnswer").stream().map(a -> (PlayerAnswerDTO) a)
+				.collect(Collectors.toList());
+	}
 
-	// -------- Public getters from cache --------
 	public List<ThemeDTO> getAllThemes() {
 		return themeCache;
 	}
@@ -126,6 +132,10 @@ public class DBManager {
 
 	public List<AnswerDTO> getAllAnswers() {
 		return answerCache;
+	}
+	
+	public List<PlayerAnswerDTO> getAllPlayerAnswers() {
+		return playerAnswerCache;
 	}
 
 	public String saveTheme(ThemeDTO theme) {
@@ -148,7 +158,7 @@ public class DBManager {
 	public String saveQuestion(QuestionDTO question) {
 		QuestionDAO dao = new QuestionDAO(question);
 		String result = saveDAO(dao);
-
+		
 		if (result != null) {
 			return result;
 		}
@@ -166,10 +176,10 @@ public class DBManager {
 				saveDAO(new AnswerDAO(answer));
 			}
 		}
-
 		refreshQuestions();
+		
 		refreshAnswers();
-
+		
 		return "QUESTION_SAVED";
 	}
 

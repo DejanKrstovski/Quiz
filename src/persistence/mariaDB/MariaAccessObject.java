@@ -2,7 +2,7 @@ package persistence.mariaDB;
 
 import java.sql.PreparedStatement;
 
-import persistence.DataAccessObject;
+import persistence.serialization.DataAccessObject;
 
 /**
  * Class for all entity classes of package persistence.maria.entities

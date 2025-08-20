@@ -10,12 +10,13 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 
+import bussinesLogic.AnswerDTO;
 import bussinesLogic.ErrorHandler;
+import bussinesLogic.QuestionDTO;
+import bussinesLogic.ThemeDTO;
 import bussinesLogic.Validator;
-import bussinesLogic.datenBank.AnswerDTO;
-import bussinesLogic.datenBank.QuestionDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
-import bussinesLogic.datenBank.ThemeDTO;
+import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
 import gui.Panels.AnswerPanel;
 import gui.Panels.ComboBoxJListPanel;
@@ -57,8 +58,8 @@ import helpers.ThemeListItem;
 public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, GuiConstants {
 	
 	/** Access point for quiz themes and questions. */
-//	private final QuizDataManager_serial dataManager = QuizDataManager_serial.getInstance();
 	private final QuizDBDataManager dataManager = QuizDBDataManager.getInstance();
+	private final QuizSManager sManager = QuizSManager.getInstance();
 	private final ErrorHandler errorHandler = ErrorHandler.getInstance();
 	private MyButton buttonShow;
 	private SubPanel centerPanel;
@@ -77,10 +78,9 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	private ThemeDTO selectedTheme;
 	private List<ThemeDTO> allThemes = new ArrayList<>();
 	private List<ThemeListItem> themeItems = new ArrayList<>();
-
+	private List<QuestionsChangeListener> questionChangeListeners = new ArrayList<>();
 	private List<QuestionDTO> allQuestions;
 	private List<QuestionListItem> questionItems;
-	private QuestionsChangeListener questionsChangeListener;
 
 	/**
 	 * Constructs the panel, building its layout, components, and initial listeners.
@@ -286,9 +286,8 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 				final QuestionListItem selectedItem = comboPanel.getSelectedQuestionItem();
 
 				if (selectedItem == null) {
-					return; // ignore event when nothing is actually selected
+					return;
 				}
-				System.out.println("Clicked: " + selectedItem + " (id=" + selectedItem.getId() + ")");
 				if (selectedItem != null && selectedItem.getId() != -1) {
 					QuestionDTO question = new QuestionDTO();
 					question = getQuestionById(selectedItem.getId());
@@ -319,8 +318,12 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			showMessage(ErrorHandler.getInstance().getError());
 			return;
 		}
+//		for(AnswerDTO answer : question.getAnswers()) {
+//			sManager.saveAnswer(answer);
+//		}
 		final String result = dataManager.saveQuestion(question);
-		
+		sManager.saveQuestion(question);
+		allQuestions = dataManager.getAllQuestions();
 		questionItems = dataManager.getQuestionsFor(theme).stream()
 		        .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
 		        .collect(Collectors.toList());
@@ -346,14 +349,12 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			final AnswerDTO answer = new AnswerDTO();
 			String text = answerPanel.getAnswerFields(i).getText();
 			boolean isCorrect = answerPanel.getAnswerCheckBoxes(i).isSelected();
-			System.out.println(answer);
 			if(!text.isEmpty() || !text.isBlank()) {
 				answer.setText(text);
 				answer.setCorrect(isCorrect);
 				answer.setQuestionId(currentQuestionId);
 				answers.add(answer);
 			}
-			
 		}
 		question.setAnswers(answers);
 		return question;
@@ -453,14 +454,16 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	}
 
 	/** Registers a listener to be invoked when questions change. */
-	public void setOnQuestionsChangeListener(final QuestionsChangeListener listener) {
-		this.questionsChangeListener = listener;
+	public void addOnQuestionsChangeListener(QuestionsChangeListener listener) {
+		if(listener != null) {
+			questionChangeListeners.add(listener);
+		}
 	}
 
 	/** Invokes the registered QuestionsChangeListener, if present. */
 	private void notifyQuestionsChanged() {
-		if (questionsChangeListener != null) {
-			questionsChangeListener.onQuestionsChanged();
+		for (QuestionsChangeListener listener : questionChangeListeners) {
+			listener.onQuestionsChanged();
 		}
 	}
 

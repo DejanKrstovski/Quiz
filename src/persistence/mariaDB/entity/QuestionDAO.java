@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import bussinesLogic.DataTransportObject;
-import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.QuestionDTO;
 import persistence.mariaDB.MariaAccessObject;
 
 public class QuestionDAO extends MariaAccessObject{

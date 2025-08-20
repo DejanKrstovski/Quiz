@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import bussinesLogic.DataTransportObject;
-import bussinesLogic.datenBank.ThemeDTO;
+import bussinesLogic.ThemeDTO;
 import persistence.mariaDB.MariaAccessObject;
 
 /**

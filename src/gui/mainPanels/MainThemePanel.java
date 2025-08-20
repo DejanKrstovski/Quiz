@@ -11,9 +11,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 
 import bussinesLogic.ErrorHandler;
+import bussinesLogic.ThemeDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
-import bussinesLogic.datenBank.ThemeDTO;
-import bussinesLogic.serialization.QuizDataManager_serial;
+import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
 import gui.Panels.LabelFieldPanel;
 import gui.Panels.LabelJListPanel;
@@ -46,7 +46,7 @@ import helpers.ThemeListItem;
  * <ul>
  *   <li>Duplicate title checking for both add and edit</li>
  *   <li>Selection restore after save</li>
- *   <li>Consistent refresh from {@link QuizDataManager_serial} after modifications</li>
+ *   <li>Consistent refresh from {@link QuizSManager} after modifications</li>
  * </ul>
  * 
  * @author 
@@ -68,7 +68,7 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     private LabelJListPanel<ThemeListItem> labelJListPanel;
     private final List<ThemeChangeListener> themeChangeListeners = new ArrayList<>();
     private final QuizDBDataManager dbManager = QuizDBDataManager.getInstance();
-//  private final QuizDataManager_serial dataManager = QuizDataManager_serial.getInstance();
+    private final QuizSManager sManager = QuizSManager.getInstance();
 
 
     /**
@@ -213,6 +213,7 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
             theme.setTitle(title);
             theme.setText(info);
             dbManager.saveTheme(theme);
+            sManager.saveTheme(theme);
             selectedThemeId = theme.getId(); // Select the new theme after saving
             showMessage(ErrorHandler.getInstance().getInfo());
         } else {

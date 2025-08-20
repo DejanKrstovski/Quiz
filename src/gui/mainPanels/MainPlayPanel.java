@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 
 import javax.swing.BoxLayout;
 
-import bussinesLogic.datenBank.AnswerDTO;
-import bussinesLogic.datenBank.PlayerAnswerDTO;
-import bussinesLogic.datenBank.QuestionDTO;
+import bussinesLogic.AnswerDTO;
+import bussinesLogic.PlayerAnswerDTO;
+import bussinesLogic.QuestionDTO;
+import bussinesLogic.ThemeDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
-import bussinesLogic.datenBank.ThemeDTO;
 import gui.GuiConstants;
 import gui.Panels.AnswerPanel;
 import gui.Panels.ComboBoxJListPanel;
@@ -43,11 +43,8 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	private List<QuestionDTO> allQuestions = new ArrayList<>();
 
 	private QuestionDTO currentQuestion;
-
 	private ThemeDTO theme;
-
-	private int currentQuestionId;
-
+	
 	public MainPlayPanel() {
 		super();
 		init();
@@ -124,33 +121,38 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 				return;
 			}
 			updateQuestionList();
+			loadRandomQuestion();
 		});
 
 		MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
 		MyButton btnShowSolution = buttons[0];
-		MyButton btnCheckAnswer = buttons[1];
+		MyButton btnSaveAnswer = buttons[1];
 		MyButton btnNextQuestion = buttons[2];
 
 		btnShowSolution.setMnemonic(KeyEvent.VK_A);
-		btnCheckAnswer.setMnemonic(KeyEvent.VK_C);
+		btnSaveAnswer.setMnemonic(KeyEvent.VK_S);
 		btnNextQuestion.setMnemonic(KeyEvent.VK_N);
-
+		btnShowSolution.setFocusable(false);
+		btnSaveAnswer.setFocusable(false);
+		
 		btnShowSolution.addActionListener(e -> showAnswer());
-		btnCheckAnswer.addActionListener(e -> savePlayerAnswers());
+		btnSaveAnswer.addActionListener(e -> savePlayerAnswers());
 		btnNextQuestion.addActionListener(e -> loadRandomQuestion());
 	}
 
 	private void fillWithData(QuestionDTO question) {
 		clearAllFields();
+		showMessage(EMPTY_STRING);
 		if (question != null) {
-			currentQuestionId = question.getId();
-			System.out.println("Current is : "+ currentQuestionId + " And actuell is: " + question.getId());
+			currentQuestion = question;
+			
 			ThemeDTO theme = getThemeById(question.getThemeId());
 			themePanel.setText(theme != null ? theme.getTitle() : "");
 			titlePanel.setText(question.getTitle());
 			questionPanel.setQuestionText(question.getText());
 			questionPanel.getQuestionTextArea().setEditable(false);
 			List<AnswerDTO> answers = dataManager.getAnswersFor(question);
+			currentQuestion.setAnswers(answers);
 			for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
 				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
 			}
@@ -183,28 +185,32 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 
 	private void updateQuestionList() {
 	    ThemeListItem selectedTheme = comboPanel.getSelectedThemeItem();
-	    List<QuestionListItem> newQuestions;
+	    List<QuestionListItem> newQuestions = new ArrayList<>();
 
 	    if (selectedTheme == null || selectedTheme.getId() == NO_SELECTION) {
-	        newQuestions = dataManager.getAllQuestions().stream()
+	        newQuestions = allQuestions.stream()
 	                .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
 	                .collect(Collectors.toList());
+	        System.out.println("Alle Fragen anzahl: " + newQuestions.size());
+	        comboPanel.updateQuestions(newQuestions);
+	        return;
 	    } else {
 	        theme = getThemeById(selectedTheme.getId());
 	        if (theme != null) {
 	            newQuestions = dataManager.getQuestionsFor(theme).stream()
 	                    .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
 	                    .collect(Collectors.toList());
+	            System.out.println("Themen Fragen anzahl: " + newQuestions.size());
 	        } else {
 	            newQuestions = new ArrayList<>();
 	        }
 	    }
-
+	    comboPanel.updateQuestions(newQuestions);
 	    if (currentQuestion == null || 
 	    	    newQuestions.stream().noneMatch(q -> q.getId() == currentQuestion.getId())) {
-	    	    fillWithData(null); // no match found, reset
+	    	    fillWithData(null);
 	    	}
-	    comboPanel.updateQuestions(newQuestions);
+	    
 	}
 
 
@@ -218,12 +224,10 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			showMessage(QUESTION_NOT_SELECTED);
 			return;
 		}
-		QuestionDTO currentQuestion = findQuestionById(currentQuestionId);
 		if (currentQuestion == null) {
 			showMessage(QUESTION_NOT_FOUND);
 			return;
 		}
-		currentQuestion.setAnswers(dataManager.getAnswersFor(currentQuestion));
 		List<Integer> correctIndices = new ArrayList<>();
 		List<AnswerDTO> answers = currentQuestion.getAnswers();
 		for (int i = 0; i < answers.size(); i++) {
@@ -249,7 +253,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 
 	private void savePlayerAnswers() {
 	    if (currentQuestion == null) {
-	        showMessage("Es ist keine Frage geladen.");
+	        showMessage(NO_QUESTION_LOADED);
 	        return;
 	    }
 	    List<AnswerDTO> possibleAnswers = dataManager.getAnswersFor(currentQuestion);
@@ -271,11 +275,10 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	            PlayerAnswerDTO playerAnswer = new PlayerAnswerDTO();
 	            playerAnswer.setQuestionId(currentQuestion.getId());
 	            playerAnswer.setAnswerId(answer.getId());
-	            playerAnswer.setSelected(true);
 
 	            String result = dataManager.savePlayerAnswer(playerAnswer);
 	            if (result != null) {
-	                showMessage("Fehler: " + result);
+	                showMessage(result);
 	                return;
 	            }
 	        }
@@ -283,7 +286,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	    for (int i = 0; i < MAX_ANSWERS; i++) {
 	        answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
 	    }
-	    showMessage("Antwort gespeichert");
+	    showMessage(ANSWER_SAVED);
 	}
 
 	private void loadRandomQuestion() {
@@ -297,19 +300,22 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			} else {
 				currentQuestion = dataManager.getRandomQuestionFor(theme);
 			}
-			fillWithData(currentQuestion);
+			if(currentQuestion != null)
+				fillWithData(currentQuestion);
+			else
+				showMessage(ERROR_NO_QUESTIONS_FOR_THEME);
 		}
-	}
-
-	private QuestionDTO findQuestionById(int questionId) {
-		return dataManager.getAllQuestions().stream().filter(q -> q.getId() == questionId).findFirst()
-				.orElse(null);
 	}
 	
 	@Override
 	public void onQuestionsChanged() {
+		refreshQuestions();
+	    currentQuestion = null;
+	    updateQuestionList();
+	}
+
+	private void refreshQuestions() {
 		allQuestions = dataManager.getAllQuestions();
-		updateQuestionList();
 	}
 
 	@Override

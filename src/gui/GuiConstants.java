@@ -104,13 +104,14 @@ public interface GuiConstants {
     public static final String THEME_SUCCESFULLY_UPDATED = "Thema erfolgreich aktualisiert.";
     public static final String CHOOSE_A_THEME_MSG = "Bitte ein Thema auswählen!";
     public static final String CHOOSE_A_QUESTION_MSG = "Bitte eine Frage auswählen!";
-
+    public static final String NO_QUESTION_LOADED = "Es ist keine Frage geladen.";
     // Confirmation dialogs and warnings
     public static final String DELETE_CONFIRMATION = "Löschbestätigung";
     public static final String THEME_DELETE_INFORMATION = "Beim Löschen des ausgewählten Themas werden alle zugehörigen Fragen gelöscht. Sind Sie sicher?";
     public static final String WARNING_EMPTY_TITLE_INFO = "Titel oder Informationen dürfen nicht leer sein!";
     public static final String WARNING_THEME_EXISTS = "Das Thema ist bereits vorhanden.";
     public static final String WARNING_ALL_FIELDS = "Bitte alle Felder ausfüllen!";
+    public static final String ERROR = "Fehler: ";
     public static final String ERROR_THEME_LOAD = "Das Thema konnte nicht geladen werden.";
     public static final String ERROR_THEME_NOT_FOUND = "Das Thema konnte nicht gefunden werden.";
     public static final String QUESTION_DELETING_NOT_POSSIBLE = "Die Frage konnte nicht gelöscht werden.";
@@ -121,6 +122,7 @@ public interface GuiConstants {
     public static final String ERROR_NO_QUESTIONS_FOR_THEME = "Keine Fragen für das Thema vorhanden.";
     public static final String CHOOSE_AN_ANSWER = "Bitte eine Antwort auswählen!";
     public static final String CORRECT_ANSWER = "Korrekt! Alle Antworten sind selektiert.";
+    public static final String ANSWER_SAVED = "Antwort gespeichert";
     
     // Fonts for different components
     public static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 20);
