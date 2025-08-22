@@ -1,4 +1,4 @@
-package gui.Panels;
+package gui.panels;
 
 import java.util.ArrayList;
 import javax.swing.Box;
@@ -6,9 +6,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 import gui.GuiConstants;
-import gui.Swing.MyCheckBox;
-import gui.Swing.MyLabel;
-import gui.Swing.MyTextField;
+import gui.swing.MyCheckBox;
+import gui.swing.MyLabel;
+import gui.swing.MyTextField;
 
 /**
  * A panel that displays four rows of input fields for quiz answers.
@@ -79,5 +79,5 @@ public class AnswerPanel extends SubPanel implements GuiConstants{
 	public MyCheckBox getAnswerCheckBoxes(int i) {
 		return answerCheckBoxes.get(i);
 	}
-
+	
 }

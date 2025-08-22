@@ -1,9 +1,9 @@
-package gui.Panels;
+package gui.panels;
 
 import javax.swing.BoxLayout;
 
 import gui.GuiConstants;
-import gui.Swing.MyTextField;
+import gui.swing.MyTextField;
 
 /**
  * A simple panel for displaying messages or status updates to the user.

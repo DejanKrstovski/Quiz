@@ -1,10 +1,10 @@
-package gui.Panels;
+package gui.panels;
 
 import javax.swing.BoxLayout;
 
 import gui.GuiConstants;
-import gui.Swing.MyLabel;
-import gui.Swing.MyTextField;
+import gui.swing.MyLabel;
+import gui.swing.MyTextField;
 
 /**
  * A reusable panel that contains a label and a single text field, arranged

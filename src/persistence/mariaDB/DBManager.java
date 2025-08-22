@@ -177,7 +177,6 @@ public class DBManager {
 			}
 		}
 		refreshQuestions();
-		
 		refreshAnswers();
 		
 		return "QUESTION_SAVED";
@@ -207,6 +206,33 @@ public class DBManager {
 	}
 	
 	public String savePlayerAnswer(PlayerAnswerDTO playerAnswer) {
-	    return saveDAO(new PlayerAnswerDAO(playerAnswer));
+		String result = saveDAO(new PlayerAnswerDAO(playerAnswer));
+		if(result == null)
+			refreshPlayerAnswers();
+	    return result;
 	}
+
+	public String deleteAllPlayerAnswers() {
+	    String sql = PlayerAnswerDAO.getDeleteAllStatement();
+
+	    try {
+	        connection.setAutoCommit(false);
+	        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+	            stmt.executeUpdate();
+	        }
+	        connection.commit();
+	        refreshPlayerAnswers(); 
+	        return "Success";
+	    } catch (SQLException e) {
+	        try {
+	            connection.rollback();
+	        } catch (SQLException ignore) {}
+	        return e.getMessage();
+	    } finally {
+	        try {
+	            connection.setAutoCommit(true);
+	        } catch (SQLException ignore) {}
+	    }
+	}
+
 }

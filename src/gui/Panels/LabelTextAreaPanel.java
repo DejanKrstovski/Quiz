@@ -1,4 +1,4 @@
-package gui.Panels;
+package gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -6,9 +6,9 @@ import java.awt.Dimension;
 import javax.swing.BoxLayout;
 
 import gui.GuiConstants;
-import gui.Swing.MyLabel;
-import gui.Swing.MyScrollPane;
-import gui.Swing.MyTextArea;
+import gui.swing.MyLabel;
+import gui.swing.MyScrollPane;
+import gui.swing.MyTextArea;
 
 /**
  * A reusable panel combining a label and a scrollable text area.

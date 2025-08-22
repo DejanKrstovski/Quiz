@@ -1,16 +1,13 @@
 package gui;
 
-import java.awt.Color;
-
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
-import gui.Swing.MyLabel;
-import gui.Swing.MyTabPane;
 import gui.mainPanels.MainPlayPanel;
 import gui.mainPanels.MainQuestionPanel;
 import gui.mainPanels.MainStatisticPanel;
 import gui.mainPanels.MainThemePanel;
+import gui.swing.MyTabPane;
 import persistence.mariaDB.createDB.DBCreator;
 
 /**
@@ -62,7 +59,7 @@ public class QuizApp extends JFrame implements GuiConstants {
 	 * Initializes the GUI components, including the frame setup, tabbed pane, and
 	 * tab labels. Sets the frame visible at the end of initialization.
 	 */
-	private void init() {
+	private void init() {		
 		setupFrame();
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -70,9 +67,7 @@ public class QuizApp extends JFrame implements GuiConstants {
 		    e.printStackTrace();
 		}
 		setupTabs();
-		customizeTabLabels();
 		setVisible(true);
-		
 	}
 
 	/**
@@ -93,11 +88,12 @@ public class QuizApp extends JFrame implements GuiConstants {
 	private void setupTabs() {
 		tabPane = new MyTabPane();
 
-//		tabPane.addTab(TAB_THEMES, themePanel);
-//		tabPane.addTab(TAB_QUESTIONS, questionPanel);
-//		tabPane.addTab(TAB_PLAY, playPanel);
+		tabPane.addTab(TAB_THEMES, themePanel);
+		tabPane.addTab(TAB_QUESTIONS, questionPanel);
+		tabPane.addTab(TAB_PLAY, playPanel);
 		tabPane.addTab(TAB_STATISTIC, statisticPanel);
-
+		tabPane.applyCustomLabels();
+		
 		themePanel.addOnThemeChangeListener(questionPanel);
 		themePanel.addOnThemeChangeListener(playPanel);
 		themePanel.addOnThemeChangeListener(statisticPanel);
@@ -105,24 +101,6 @@ public class QuizApp extends JFrame implements GuiConstants {
 		questionPanel.addOnQuestionsChangeListener(statisticPanel);
 		
 		add(tabPane);
-	}
-
-	/**
-	 * Customizes tab headers by replacing them with centered orange labels with
-	 * padding, improving their visual appearance.
-	 */
-	private void customizeTabLabels() {
-		for (int i = 0; i < tabPane.getTabCount(); i++) {
-			MyLabel tabLabel = new MyLabel(tabPane.getTitleAt(i));
-			tabLabel.setFont(FONT_TABS);
-			tabLabel.setPreferredSize(TABS_LABEL_SIZE);
-			tabLabel.setHorizontalAlignment(MyLabel.CENTER);
-			tabLabel.setVerticalAlignment(MyLabel.CENTER);
-			tabLabel.setOpaque(true);
-			tabLabel.setBackground(Color.CYAN);
-			tabLabel.setBorder(DISTANCE_BETWEEN_LABEL_TABS);
-			tabPane.setTabComponentAt(i, tabLabel);
-		}
 	}
 
 	/**

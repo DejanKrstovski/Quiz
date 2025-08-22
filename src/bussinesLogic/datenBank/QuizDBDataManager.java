@@ -101,4 +101,8 @@ public class QuizDBDataManager implements QuizDataInterface {
 	public String savePlayerAnswer(PlayerAnswerDTO answer) {
 		return dbManager.savePlayerAnswer(answer);
 	}
+	
+	public String deleteAllPlayerAnswers() {
+		return dbManager.deleteAllPlayerAnswers();
+	}
 }

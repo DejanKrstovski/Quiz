@@ -18,14 +18,14 @@ import bussinesLogic.Validator;
 import bussinesLogic.datenBank.QuizDBDataManager;
 import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
-import gui.Panels.AnswerPanel;
-import gui.Panels.ComboBoxJListPanel;
-import gui.Panels.LabelFieldPanel;
-import gui.Panels.LabelTextAreaPanel;
-import gui.Panels.SouthPanel;
-import gui.Panels.SubPanel;
-import gui.Swing.MyButton;
-import gui.Swing.MyLabel;
+import gui.panels.AnswerPanel;
+import gui.panels.ComboBoxJListPanel;
+import gui.panels.LabelFieldPanel;
+import gui.panels.LabelTextAreaPanel;
+import gui.panels.SouthPanel;
+import gui.panels.SubPanel;
+import gui.swing.MyButton;
+import gui.swing.MyLabel;
 import helpers.QuestionListItem;
 import helpers.ThemeListItem;
 
@@ -218,6 +218,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 		panel.add(Box.createHorizontalGlue());
 		panel.add(buttonShow);
 		buttonShow.setVisible(false);
+		buttonShow.setFocusable(false);
 		return panel;
 	}
 

@@ -1,10 +1,10 @@
-package gui.Panels;
+package gui.panels;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 
 import gui.GuiConstants;
-import gui.Swing.MyButton;
+import gui.swing.MyButton;
 
 /**
  * A panel that contains three horizontally aligned buttons.
@@ -29,14 +29,17 @@ public class ButtonsPanel extends SubPanel implements GuiConstants{
         setBorder(DISTANCE_BETWEEN_ELEMENTS);
         buttons[0]=new MyButton(firstLabel);
         buttons[0].setActionCommand(firstLabel);
+        buttons[0].setFocusable(false);
         add(buttons[0]);
         add(Box.createHorizontalGlue());
         buttons[1]=new MyButton(secondLabel);
         buttons[1].setActionCommand(secondLabel);
+        buttons[1].setFocusable(false);
         add(buttons[1]);
         add(Box.createHorizontalGlue());
         buttons[2]=new MyButton(thirdLabel);
         buttons[2].setActionCommand(thirdLabel);
+        buttons[2].setFocusable(false);
         add(buttons[2]);
     }	
 	

@@ -1,4 +1,4 @@
-package gui.Panels;
+package gui.panels;
 
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
@@ -11,8 +11,8 @@ import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 
-import gui.Swing.MyComboBox;
-import gui.Swing.MyScrollPane;
+import gui.swing.MyComboBox;
+import gui.swing.MyScrollPane;
 import helpers.QuestionListItem;
 
 /**

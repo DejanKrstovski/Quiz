@@ -13,6 +13,8 @@ public class PlayerAnswerDAO extends MariaAccessObject {
 	private static final String SQL_INSERT = "INSERT INTO PLAYERANSWER (QUESTIONID, ANSWERID, CREATED_AT) VALUES (?, ?, ?)";
 	private static final String SQL_UPDATE = "UPDATE PLAYERANSWER SET QUESTIONID = ?, ANSWERID = ?, CREATED_AT = ? WHERE ID = ?";
 	private static final String SQL_DELETE = "DELETE FROM PLAYERANSWER WHERE ID = ?";
+	private static final String SQL_DELETE_ALL = "DELETE FROM PLAYERANSWER";
+
 	private static final String SQL_SELECT = "SELECT * FROM QUIZ.PLAYERANSWER";
 
 	private int questionId;
@@ -53,6 +55,10 @@ public class PlayerAnswerDAO extends MariaAccessObject {
 	public String getDeleteStatement() {
 		return SQL_DELETE;
 	}
+	
+    public static String getDeleteAllStatement() {
+        return SQL_DELETE_ALL;
+    }
 
 	@Override
 	public DataTransportObject toDTO() {

@@ -13,20 +13,22 @@ import bussinesLogic.PlayerAnswerDTO;
 import bussinesLogic.QuestionDTO;
 import bussinesLogic.ThemeDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
+import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
-import gui.Panels.AnswerPanel;
-import gui.Panels.ComboBoxJListPanel;
-import gui.Panels.LabelFieldPanel;
-import gui.Panels.LabelTextAreaPanel;
-import gui.Panels.SouthPanel;
-import gui.Panels.SubPanel;
-import gui.Swing.MyButton;
+import gui.panels.AnswerPanel;
+import gui.panels.ComboBoxJListPanel;
+import gui.panels.LabelFieldPanel;
+import gui.panels.LabelTextAreaPanel;
+import gui.panels.SouthPanel;
+import gui.panels.SubPanel;
+import gui.swing.MyButton;
 import helpers.QuestionListItem;
 import helpers.ThemeListItem;
 
 public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, ThemeChangeListener, GuiConstants {
 
 	private final QuizDBDataManager dataManager = QuizDBDataManager.getInstance();
+    private final QuizSManager sManager = QuizSManager.getInstance();
 
 	private SubPanel centerPanel;
 	private SubPanel westPanel;
@@ -44,12 +46,16 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 
 	private QuestionDTO currentQuestion;
 	private ThemeDTO theme;
-	
+	private MyButton[] buttons;
+
+	private List<AnswerDTO> visibleAnswers;
+
 	public MainPlayPanel() {
 		super();
 		init();
 		initListeners();
 		loadRandomQuestion();
+		setForeground(COLOR_RANDOM);
 	}
 
 	private void init() {
@@ -81,7 +87,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		questionPanel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
 
 		answerPanel = new AnswerPanel();
-		
+
 		panel.add(themePanel);
 		panel.add(titlePanel);
 		panel.add(questionPanel);
@@ -111,7 +117,6 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	private void initListeners() {
 		comboPanel.addThemeSelectionListener(e -> {
 			ThemeListItem selectedItem = comboPanel.getSelectedThemeItem();
-			System.out.println(selectedItem);
 			if (selectedItem == null)
 				return;
 
@@ -124,7 +129,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			loadRandomQuestion();
 		});
 
-		MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
+		buttons = bottomPanel.getButtonsPanel().getButtons();
 		MyButton btnShowSolution = buttons[0];
 		MyButton btnSaveAnswer = buttons[1];
 		MyButton btnNextQuestion = buttons[2];
@@ -132,9 +137,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		btnShowSolution.setMnemonic(KeyEvent.VK_A);
 		btnSaveAnswer.setMnemonic(KeyEvent.VK_S);
 		btnNextQuestion.setMnemonic(KeyEvent.VK_N);
-		btnShowSolution.setFocusable(false);
-		btnSaveAnswer.setFocusable(false);
-		
+
 		btnShowSolution.addActionListener(e -> showAnswer());
 		btnSaveAnswer.addActionListener(e -> savePlayerAnswers());
 		btnNextQuestion.addActionListener(e -> loadRandomQuestion());
@@ -145,19 +148,20 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		showMessage(EMPTY_STRING);
 		if (question != null) {
 			currentQuestion = question;
-			
+
 			ThemeDTO theme = getThemeById(question.getThemeId());
 			themePanel.setText(theme != null ? theme.getTitle() : "");
 			titlePanel.setText(question.getTitle());
 			questionPanel.setQuestionText(question.getText());
 			questionPanel.getQuestionTextArea().setEditable(false);
-			List<AnswerDTO> answers = dataManager.getAnswersFor(question);
-			currentQuestion.setAnswers(answers);
-			for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
-				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
+			visibleAnswers = new ArrayList<>(dataManager.getAnswersFor(question));
+			currentQuestion.setAnswers(visibleAnswers);
+			for (int i = 0; i < Math.min(visibleAnswers.size(), MAX_ANSWERS); i++) {
+				answerPanel.getAnswerFields(i).setText(visibleAnswers.get(i).getText());
+				answerPanel.getAnswerCheckBoxes(i).putClientProperty(ANSWER_ID, visibleAnswers.get(i).getId());
 			}
-			for (int i = 0; i <  MAX_ANSWERS; i++)
-			answerPanel.getAnswerFields(i).setEditable(false);
+			for (int i = 0; i < MAX_ANSWERS; i++)
+				answerPanel.getAnswerFields(i).setEditable(false);
 		}
 	}
 
@@ -184,35 +188,29 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	}
 
 	private void updateQuestionList() {
-	    ThemeListItem selectedTheme = comboPanel.getSelectedThemeItem();
-	    List<QuestionListItem> newQuestions = new ArrayList<>();
+		ThemeListItem selectedTheme = comboPanel.getSelectedThemeItem();
+		List<QuestionListItem> newQuestions = new ArrayList<>();
 
-	    if (selectedTheme == null || selectedTheme.getId() == NO_SELECTION) {
-	        newQuestions = allQuestions.stream()
-	                .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
-	                .collect(Collectors.toList());
-	        System.out.println("Alle Fragen anzahl: " + newQuestions.size());
-	        comboPanel.updateQuestions(newQuestions);
-	        return;
-	    } else {
-	        theme = getThemeById(selectedTheme.getId());
-	        if (theme != null) {
-	            newQuestions = dataManager.getQuestionsFor(theme).stream()
-	                    .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
-	                    .collect(Collectors.toList());
-	            System.out.println("Themen Fragen anzahl: " + newQuestions.size());
-	        } else {
-	            newQuestions = new ArrayList<>();
-	        }
-	    }
-	    comboPanel.updateQuestions(newQuestions);
-	    if (currentQuestion == null || 
-	    	    newQuestions.stream().noneMatch(q -> q.getId() == currentQuestion.getId())) {
-	    	    fillWithData(null);
-	    	}
-	    
+		if (selectedTheme == null || selectedTheme.getId() == NO_SELECTION) {
+			newQuestions = allQuestions.stream().map(q -> new QuestionListItem(q.getId(), q.getTitle()))
+					.collect(Collectors.toList());
+			comboPanel.updateQuestions(newQuestions);
+			return;
+		} else {
+			theme = getThemeById(selectedTheme.getId());
+			if (theme != null) {
+				newQuestions = dataManager.getQuestionsFor(theme).stream()
+						.map(q -> new QuestionListItem(q.getId(), q.getTitle())).collect(Collectors.toList());
+			} else {
+				newQuestions = new ArrayList<>();
+			}
+		}
+		comboPanel.updateQuestions(newQuestions);
+		if (currentQuestion == null || newQuestions.stream().noneMatch(q -> q.getId() == currentQuestion.getId())) {
+			fillWithData(null);
+		}
+
 	}
-
 
 	private ThemeDTO getThemeById(int id) {
 		return allThemes.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
@@ -249,49 +247,57 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		for (int i = 0; i < MAX_ANSWERS; i++) {
 			answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
 		}
+		buttons[1].setEnabled(false);
 	}
 
 	private void savePlayerAnswers() {
-	    if (currentQuestion == null) {
-	        showMessage(NO_QUESTION_LOADED);
-	        return;
-	    }
-	    List<AnswerDTO> possibleAnswers = dataManager.getAnswersFor(currentQuestion);
-	    boolean anySelected = false;
-	    for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
-	        if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
-	            anySelected = true;
-	            break;
-	        }
-	    }
-	    if (!anySelected) {
-	        showMessage("Bitte mindestens eine Antwort auswählen.");
-	        return;
-	    }
-	    for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
-	        if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
-	            AnswerDTO answer = possibleAnswers.get(i);
+		if (currentQuestion == null) {
+			showMessage(NO_QUESTION_LOADED);
+			return;
+		}
+		List<AnswerDTO> possibleAnswers = visibleAnswers;
+		boolean anySelected = false;
+		for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
+			if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+				anySelected = true;
+				break;
+			}
+		}
+		if (!anySelected) {
+			showMessage("Bitte mindestens eine Antwort auswählen.");
+			return;
+		}
+		for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
+			var cb = answerPanel.getAnswerCheckBoxes(i);
+			if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+				Object idObj = cb.getClientProperty(ANSWER_ID);
+				if (idObj == null) {
+		            showMessage(ERROR_MISSING_ID);
+		            return;
+		        }
+		        int answerId = (int) idObj;
+				PlayerAnswerDTO playerAnswer = new PlayerAnswerDTO();
+				playerAnswer.setQuestionId(currentQuestion.getId());
+				playerAnswer.setAnswerId(answerId);
 
-	            PlayerAnswerDTO playerAnswer = new PlayerAnswerDTO();
-	            playerAnswer.setQuestionId(currentQuestion.getId());
-	            playerAnswer.setAnswerId(answer.getId());
-
-	            String result = dataManager.savePlayerAnswer(playerAnswer);
-	            if (result != null) {
-	                showMessage(result);
-	                return;
-	            }
-	        }
-	    }
-	    for (int i = 0; i < MAX_ANSWERS; i++) {
-	        answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
-	    }
-	    showMessage(ANSWER_SAVED);
+				String result = dataManager.savePlayerAnswer(playerAnswer);
+				sManager.savePlayerAnswer(playerAnswer);
+				if (result != null) {
+					showMessage(result);
+					return;
+				}
+			}
+		}
+		for (int i = 0; i < MAX_ANSWERS; i++) {
+			answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
+		}
+		showMessage(ANSWER_SAVED);
+		buttons[1].setEnabled(false);
 	}
 
 	private void loadRandomQuestion() {
 		updateQuestionList();
-		for(int i=0; i<MAX_ANSWERS; i++) {
+		for (int i = 0; i < MAX_ANSWERS; i++) {
 			answerPanel.getAnswerCheckBoxes(i).setEnabled(true);
 		}
 		if (!allQuestions.isEmpty()) {
@@ -300,18 +306,19 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			} else {
 				currentQuestion = dataManager.getRandomQuestionFor(theme);
 			}
-			if(currentQuestion != null)
+			if (currentQuestion != null)
 				fillWithData(currentQuestion);
 			else
 				showMessage(ERROR_NO_QUESTIONS_FOR_THEME);
 		}
+		buttons[1].setEnabled(true);
 	}
-	
+
 	@Override
 	public void onQuestionsChanged() {
 		refreshQuestions();
-	    currentQuestion = null;
-	    updateQuestionList();
+		currentQuestion = null;
+		updateQuestionList();
 	}
 
 	private void refreshQuestions() {
@@ -324,7 +331,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		comboPanel.updateThemes(buildThemeItems());
 		updateQuestionList();
 	}
-	
+
 	/** Displays a message in the bottom panel's message area. */
 	private void showMessage(final String message) {
 		bottomPanel.getMessagePanel().setMessageAreaText(message);

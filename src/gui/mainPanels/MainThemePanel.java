@@ -15,13 +15,13 @@ import bussinesLogic.ThemeDTO;
 import bussinesLogic.datenBank.QuizDBDataManager;
 import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
-import gui.Panels.LabelFieldPanel;
-import gui.Panels.LabelJListPanel;
-import gui.Panels.LabelTextAreaPanel;
-import gui.Panels.SouthPanel;
-import gui.Panels.SubPanel;
-import gui.Swing.MyButton;
-import gui.Swing.MyLabel;
+import gui.panels.LabelFieldPanel;
+import gui.panels.LabelJListPanel;
+import gui.panels.LabelTextAreaPanel;
+import gui.panels.SouthPanel;
+import gui.panels.SubPanel;
+import gui.swing.MyButton;
+import gui.swing.MyLabel;
 import helpers.ThemeListItem;
 
 /**
@@ -188,9 +188,9 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     private void initButtonsActions() {
         MyButton[] buttons = bottomPanel.getButtonsPanel().getButtons();
         buttons[0].addActionListener(e -> deleteTheme());
-        buttons[0].setMnemonic(KeyEvent.VK_L); // Alt+S activates the button
+        buttons[0].setMnemonic(KeyEvent.VK_L); 
         buttons[1].addActionListener(e -> saveTheme());
-        buttons[1].setMnemonic(KeyEvent.VK_S); // Alt+S activates the button
+        buttons[1].setMnemonic(KeyEvent.VK_S);
         buttons[2].addActionListener(e -> reset());
     }
 

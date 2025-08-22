@@ -1,4 +1,4 @@
-package gui.Panels;
+package gui.panels;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -13,8 +13,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 
 import gui.GuiConstants;
-import gui.Swing.MyLabel;
-import gui.Swing.MyScrollPane;
+import gui.swing.MyLabel;
+import gui.swing.MyScrollPane;
 
 /**
  * A reusable panel that displays a titled label above a scrollable list.

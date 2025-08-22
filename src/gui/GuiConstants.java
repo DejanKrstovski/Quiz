@@ -1,7 +1,10 @@
 package gui;
 
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.util.Random;
 
 import javax.swing.BorderFactory;
 import javax.swing.border.Border;
@@ -51,12 +54,17 @@ public interface GuiConstants {
      * Height of the main window.
      */
     public static final int FRAME_HEIGHT = 500;
-
+    public static final Random RNG = new Random();
     /**
      * The maximum number of answers and correctness
      */
     public static final int MAX_ANSWERS = 4;
-    
+    public static final int MAX_ROW_COUNT = 10;
+    public static final int ROW_HEIGHT = 30;
+    public static final Color COLOR_PRIMARY = new Color(0, 153, 0); 
+    public static final Color COLOR_SECONDARY = new Color(0, 102, 204);
+    public static final Color COLOR_RANDOM = new Color(RNG.nextInt(256), RNG.nextInt(256), RNG.nextInt(256));    
+    public static final Color COLOR_TABLE_HEADER = new Color(230, 230, 230);
     // Button labels and menu texts
     public static final String ALL_THEMES = "Alle Themen";
     public static final String SAVE_THEME = "Speichern";
@@ -70,12 +78,15 @@ public interface GuiConstants {
     public static final String NEXT_QUESTION = "Nächste Frage";
     public static final String SHOW_THEME = "Thema anzeigen";
     public static final String SHOW_LIST = "Liste anzeigen";
-
+	public static final String REFRESH = "Aktualisieren";
+	public static final String ALL_DELETE = "Alle Statistiken löschen";
     // Tab names and headers
     public static final String TAB_THEMES = "Quiz-Themen";
     public static final String TAB_QUESTIONS = "Quiz-Fragen";
     public static final String TAB_PLAY = "Quiz";
 	public static final String TAB_STATISTIC = "Statistics";
+	public static final String TAB_CHARTS = "Tabellen";
+
     public static final String LABEL_THEME_INFORMATION = "Informationen zum Thema";
 
     // General strings
@@ -105,7 +116,9 @@ public interface GuiConstants {
     public static final String CHOOSE_A_THEME_MSG = "Bitte ein Thema auswählen!";
     public static final String CHOOSE_A_QUESTION_MSG = "Bitte eine Frage auswählen!";
     public static final String NO_QUESTION_LOADED = "Es ist keine Frage geladen.";
+    
     // Confirmation dialogs and warnings
+    public static final String ANSWER_ID = "answerId";
     public static final String DELETE_CONFIRMATION = "Löschbestätigung";
     public static final String THEME_DELETE_INFORMATION = "Beim Löschen des ausgewählten Themas werden alle zugehörigen Fragen gelöscht. Sind Sie sicher?";
     public static final String WARNING_EMPTY_TITLE_INFO = "Titel oder Informationen dürfen nicht leer sein!";
@@ -123,20 +136,33 @@ public interface GuiConstants {
     public static final String CHOOSE_AN_ANSWER = "Bitte eine Antwort auswählen!";
     public static final String CORRECT_ANSWER = "Korrekt! Alle Antworten sind selektiert.";
     public static final String ANSWER_SAVED = "Antwort gespeichert";
+    public static final String STATISTICS_DELETED = "Statistiken wurden gelöscht.";
+    public static final String ERROR_MISSING_ID = "Interner Fehler: fehlende Answer-ID.";
     
     // Fonts for different components
     public static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 20);
     public static final Font FONT_TITLE = new Font("Helvetica", Font.BOLD, 24);
     public static final Font FONT_TABS = new Font("Arial", Font.PLAIN, 14);
+    public static final Font FONT_TABLES = new Font("Times New Roman", Font.BOLD, 14);
+    public static final Color DEFAULT_BUTTON_BACKGROUND_COLOR = Color.GREEN;
+    public static final Cursor DEFAULT_CURSOR = new Cursor(Cursor.HAND_CURSOR);
     
+    // RadioButtons
+	public static final String ALL_TIME = "Alle Zeiten";
+	public static final String LAST_MONTH = "Letzte Monat";
+	public static final String TODAY = "heute";
+	
     // Dimensions for UI components
     public static final Dimension TABS_LABEL_SIZE = new Dimension(150, 25);
     public static final Dimension CHECKBOX_SIZE = new Dimension(40, 40);
     public static final Dimension LABEL_SIZE = new Dimension(100, 20);
     public static final Dimension WEST_PANEL_DIMENSIONS = new Dimension(730, 800);
+    public static final Dimension COMBO_BOX = new Dimension(100, 40);
 
     // Borders and spacing for layout purposes
     public static final Border DISTANCE_BETWEEN_LABEL_TABS = BorderFactory.createEmptyBorder(10, 10, 10, 10);
     public static final Border DISTANCE_BETWEEN_ELEMENTS = BorderFactory.createEmptyBorder(0, 0, 10, 0);
     public static final Border OUTSIDE_BORDERS_FOR_SUBPANELS = BorderFactory.createEmptyBorder(15, 20, 0, 20);
+    public static final int DISTANCE_BETWEEN_RADIO_BUTTONS = 50;
+
 }

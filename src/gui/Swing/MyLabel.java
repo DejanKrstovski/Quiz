@@ -1,13 +1,14 @@
-package gui.Swing;
+package gui.swing;
 
 import javax.swing.JLabel;
 
-import gui.GuiConstants;
+import static gui.GuiConstants.FONT_LABEL;
 
 /**
- * A customized {@link JLabel} that applies a consistent font style defined in {@link GuiConstants}.
+ * A customized {@link JLabel} with consistent default styling.
  * <p>
- * Intended to be used across the GUI for visual consistency.
+ * This label applies a globally defined font (via {@link gui.GuiConstants#FONT_LABEL}),
+ * ensuring a unified look across the application UI.
  * </p>
  */
 public class MyLabel extends JLabel {
@@ -16,15 +17,31 @@ public class MyLabel extends JLabel {
      * Constructs an empty {@code MyLabel} with default styling.
      */
     public MyLabel() {
+        super();
+        applyDefaultStyling();
     }
 
     /**
-     * Constructs a {@code MyLabel} with the given text and applies the global label font.
+     * Constructs a {@code MyLabel} with the given text
+     * and applies the default styling.
      *
      * @param text the text to display in the label
      */
     public MyLabel(String text) {
         super(text);
-        setFont(GuiConstants.FONT_LABEL);
+        applyDefaultStyling();
+    }
+
+    /**
+     * Applies the default UI settings for this label.
+     * <ul>
+     *   <li>Sets the font to {@link gui.GuiConstants#FONT_LABEL}</li>
+     * </ul>
+     * <p>
+     * Subclasses may override this method to apply different styling rules.
+     * </p>
+     */
+    protected void applyDefaultStyling() {
+        setFont(FONT_LABEL);
     }
 }

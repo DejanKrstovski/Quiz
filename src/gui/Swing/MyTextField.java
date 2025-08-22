@@ -1,4 +1,4 @@
-package gui.Swing;
+package gui.swing;
 
 import javax.swing.JTextField;
 
