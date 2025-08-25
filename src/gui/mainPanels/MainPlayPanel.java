@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 
 import bussinesLogic.AnswerDTO;
@@ -22,6 +23,7 @@ import gui.panels.LabelTextAreaPanel;
 import gui.panels.SouthPanel;
 import gui.panels.SubPanel;
 import gui.swing.MyButton;
+import gui.swing.MyLabel;
 import helpers.QuestionListItem;
 import helpers.ThemeListItem;
 
@@ -91,12 +93,27 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		panel.add(themePanel);
 		panel.add(titlePanel);
 		panel.add(questionPanel);
+		panel.add(initPossibleAnswerPanel());
 		panel.add(answerPanel);
 
 		panel.setBorder(OUTSIDE_BORDERS_FOR_SUBPANELS);
 		return panel;
 	}
 
+	private SubPanel initPossibleAnswerPanel() {
+		final SubPanel panel = new SubPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
+		panel.setBorder(DISTANCE_BETWEEN_ELEMENTS);
+
+		MyLabel possibleAnswerLabel = new MyLabel(LABEL_POSSIBLE_ANSWERS);
+		MyLabel rightAnswerLabel = new MyLabel(CORRECTNESS);
+
+		panel.add(possibleAnswerLabel);
+		panel.add(Box.createHorizontalGlue());
+		panel.add(rightAnswerLabel);
+		return panel;
+	}
+	
 	private SubPanel initCenterPanel() {
 		SubPanel panel = new SubPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
@@ -157,11 +174,11 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			visibleAnswers = new ArrayList<>(dataManager.getAnswersFor(question));
 			currentQuestion.setAnswers(visibleAnswers);
 			for (int i = 0; i < Math.min(visibleAnswers.size(), MAX_ANSWERS); i++) {
-				answerPanel.getAnswerFields(i).setText(visibleAnswers.get(i).getText());
-				answerPanel.getAnswerCheckBoxes(i).putClientProperty(ANSWER_ID, visibleAnswers.get(i).getId());
+				answerPanel.getAnswerField(i).setText(visibleAnswers.get(i).getText());
+				answerPanel.getAnswerCheckBox(i).putClientProperty(ANSWER_ID, visibleAnswers.get(i).getId());
 			}
 			for (int i = 0; i < MAX_ANSWERS; i++)
-				answerPanel.getAnswerFields(i).setEditable(false);
+				answerPanel.getAnswerField(i).setEditable(false);
 		}
 	}
 
@@ -170,8 +187,8 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		titlePanel.setText("");
 		questionPanel.setQuestionText("");
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerFields(i).setText("");
-			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
+			answerPanel.getAnswerField(i).setText("");
+			answerPanel.getAnswerCheckBox(i).setSelected(false);
 		}
 	}
 
@@ -245,7 +262,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		comboPanel.updateQuestions(specialList);
 
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
+			answerPanel.getAnswerCheckBox(i).setEnabled(false);
 		}
 		buttons[1].setEnabled(false);
 	}
@@ -258,7 +275,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 		List<AnswerDTO> possibleAnswers = visibleAnswers;
 		boolean anySelected = false;
 		for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
-			if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+			if (answerPanel.getAnswerCheckBox(i).isSelected()) {
 				anySelected = true;
 				break;
 			}
@@ -268,8 +285,8 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			return;
 		}
 		for (int i = 0; i < possibleAnswers.size() && i < MAX_ANSWERS; i++) {
-			var cb = answerPanel.getAnswerCheckBoxes(i);
-			if (answerPanel.getAnswerCheckBoxes(i).isSelected()) {
+			var cb = answerPanel.getAnswerCheckBox(i);
+			if (answerPanel.getAnswerCheckBox(i).isSelected()) {
 				Object idObj = cb.getClientProperty(ANSWER_ID);
 				if (idObj == null) {
 		            showMessage(ERROR_MISSING_ID);
@@ -289,7 +306,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 			}
 		}
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerCheckBoxes(i).setEnabled(false);
+			answerPanel.getAnswerCheckBox(i).setEnabled(false);
 		}
 		showMessage(ANSWER_SAVED);
 		buttons[1].setEnabled(false);
@@ -298,7 +315,7 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 	private void loadRandomQuestion() {
 		updateQuestionList();
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerCheckBoxes(i).setEnabled(true);
+			answerPanel.getAnswerCheckBox(i).setEnabled(true);
 		}
 		if (!allQuestions.isEmpty()) {
 			if (theme == null || comboPanel.getSelectedThemeItem().getId() == NO_SELECTION) {
@@ -334,6 +351,6 @@ public class MainPlayPanel extends SubPanel implements QuestionsChangeListener, 
 
 	/** Displays a message in the bottom panel's message area. */
 	private void showMessage(final String message) {
-		bottomPanel.getMessagePanel().setMessageAreaText(message);
+		bottomPanel.getMessagePanel().setMessage(message);
 	}
 }

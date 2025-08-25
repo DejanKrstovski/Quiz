@@ -53,7 +53,7 @@ import helpers.ThemeListItem;
  * other panels.
  * </p>
  * 
- * @author
+ * @author DejanKrstovski
  */
 public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, GuiConstants {
 	
@@ -107,8 +107,8 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			questionPanel.setQuestionText(question.getText());
 			final List<AnswerDTO> answers = dataManager.getAnswersFor(question);
 			for (int i = 0; i < Math.min(answers.size(), MAX_ANSWERS); i++) {
-				answerPanel.getAnswerFields(i).setText(answers.get(i).getText());
-				answerPanel.getAnswerCheckBoxes(i).setSelected(answers.get(i).isCorrect());
+				answerPanel.getAnswerField(i).setText(answers.get(i).getText());
+				answerPanel.getAnswerCheckBox(i).setSelected(answers.get(i).isCorrect());
 			}
 		}
 	}
@@ -343,13 +343,13 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 		final QuestionDTO question = new QuestionDTO();
 		question.setId(currentQuestionId);
 		question.setTitle(titlePanel.getText());
-		question.setText(questionPanel.getTextInfo());
+		question.setText(questionPanel.getText());
 		question.setThemeId(theme.getId());
 		List<AnswerDTO> answers = new ArrayList<>();
 		for (int i = 0; i < MAX_ANSWERS; i++) {
 			final AnswerDTO answer = new AnswerDTO();
-			String text = answerPanel.getAnswerFields(i).getText();
-			boolean isCorrect = answerPanel.getAnswerCheckBoxes(i).isSelected();
+			String text = answerPanel.getAnswerField(i).getText();
+			boolean isCorrect = answerPanel.getAnswerCheckBox(i).isSelected();
 			if(!text.isEmpty() || !text.isBlank()) {
 				answer.setText(text);
 				answer.setCorrect(isCorrect);
@@ -367,8 +367,8 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 		titlePanel.setText(EMPTY_STRING);
 		questionPanel.setQuestionText(EMPTY_STRING);
 		for (int i = 0; i < MAX_ANSWERS; i++) {
-			answerPanel.getAnswerFields(i).setText(EMPTY_STRING);
-			answerPanel.getAnswerCheckBoxes(i).setSelected(false);
+			answerPanel.getAnswerField(i).setText(EMPTY_STRING);
+			answerPanel.getAnswerCheckBox(i).setSelected(false);
 		}
 		showMessage("");
 	}
@@ -377,7 +377,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	public void deleteQuestion() {
 		final QuestionListItem selectedItem = comboPanel.getSelectedQuestionItem();
 		if (selectedItem == null || selectedItem.getId() == -1) {
-			bottomPanel.getMessagePanel().setMessageAreaText(CHOOSE_A_QUESTION_MSG);
+			bottomPanel.getMessagePanel().setMessage(CHOOSE_A_QUESTION_MSG);
 			return;
 		}
 		final int confirm = JOptionPane.showConfirmDialog(this, QUESTION_DELETE_INFORMATION, DELETE_CONFIRMATION,
@@ -451,7 +451,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 
 	/** Displays a message in the bottom panel's message area. */
 	private void showMessage(final String message) {
-		bottomPanel.getMessagePanel().setMessageAreaText(message);
+		bottomPanel.getMessagePanel().setMessage(message);
 	}
 
 	/** Registers a listener to be invoked when questions change. */

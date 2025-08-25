@@ -11,6 +11,7 @@ package helpers;
  * @author DejanKrstovski
  */
 public class QuestionListItem {
+	
     /** Unique identifier of the question. */
     private int id;
 

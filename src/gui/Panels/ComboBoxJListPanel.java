@@ -11,6 +11,7 @@ import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 
+import gui.GuiConstants;
 import gui.swing.MyComboBox;
 import gui.swing.MyScrollPane;
 import helpers.QuestionListItem;
@@ -24,8 +25,11 @@ import helpers.QuestionListItem;
  *
  * @param <T> the type for combo box items (e.g. ThemeListItem)
  * @param <U> the type for list items (e.g. QuestionListItem)
+ * 
+ * @author DejanKrstovski
  */
-public class ComboBoxJListPanel<T, U> extends SubPanel {
+
+public class ComboBoxJListPanel<T, U> extends SubPanel implements GuiConstants{
 
     /** Combo box for selecting themes (e.g. ThemeListItem). */
     private final MyComboBox<T> comboBox;
@@ -51,6 +55,8 @@ public class ComboBoxJListPanel<T, U> extends SubPanel {
         for (T item : comboBoxItems) {
             comboBox.addItem(item);
         }
+        comboBox.setPreferredSize(COMBO_BOX_SIZE);
+        comboBox.setMaximumSize(COMBO_BOX_SIZE);
         add(comboBox);
         add(Box.createVerticalStrut(10));
 

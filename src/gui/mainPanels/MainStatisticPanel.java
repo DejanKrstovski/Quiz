@@ -97,7 +97,7 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
         themeFilter = new MyComboBox<>();
         updateThemesFilter();
         themeFilter.setBorder(DISTANCE_BETWEEN_ELEMENTS);
-        themeFilter.setPreferredSize(COMBO_BOX);
+        themeFilter.setPreferredSize(COMBO_BOX_SIZE_STATISTICS);
 
         periodPanel = new RadioButtonsPanel(ALL_TIME, LAST_MONTH, TODAY);
 
@@ -363,7 +363,7 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
     }
 
     private void showMessage(final String message) {
-        bottomPanel.getMessagePanel().setMessageAreaText(message);
+        bottomPanel.getMessagePanel().setMessage(message);
     }
 
     // --- Interface Implementations ---

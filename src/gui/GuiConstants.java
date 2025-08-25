@@ -38,7 +38,7 @@ public interface GuiConstants {
     /**
      * X-coordinate for the main window's initial position.
      */
-    public static final int FRAME_X = 200;
+    public static final int FRAME_X = 100;
     
     /**
      * Y-coordinate for the main window's initial position.
@@ -53,8 +53,10 @@ public interface GuiConstants {
     /**
      * Height of the main window.
      */
-    public static final int FRAME_HEIGHT = 500;
-    public static final Random RNG = new Random();
+    public static final int FRAME_HEIGHT = 600;
+    
+    public static final int H_GAP_SMALL = 20;
+    public static final int V_GAP_SMALL = 10;
     /**
      * The maximum number of answers and correctness
      */
@@ -63,7 +65,7 @@ public interface GuiConstants {
     public static final int ROW_HEIGHT = 30;
     public static final Color COLOR_PRIMARY = new Color(0, 153, 0); 
     public static final Color COLOR_SECONDARY = new Color(0, 102, 204);
-    public static final Color COLOR_RANDOM = new Color(RNG.nextInt(256), RNG.nextInt(256), RNG.nextInt(256));    
+    public static final Color COLOR_RANDOM = getRandomColor();    
     public static final Color COLOR_TABLE_HEADER = new Color(230, 230, 230);
     // Button labels and menu texts
     public static final String ALL_THEMES = "Alle Themen";
@@ -144,6 +146,8 @@ public interface GuiConstants {
     public static final Font FONT_TITLE = new Font("Helvetica", Font.BOLD, 24);
     public static final Font FONT_TABS = new Font("Arial", Font.PLAIN, 14);
     public static final Font FONT_TABLES = new Font("Times New Roman", Font.BOLD, 14);
+    public static final Font FONT_TEXT = new Font("Arial", Font.ITALIC, 16);
+
     public static final Color DEFAULT_BUTTON_BACKGROUND_COLOR = Color.GREEN;
     public static final Cursor DEFAULT_CURSOR = new Cursor(Cursor.HAND_CURSOR);
     
@@ -153,16 +157,22 @@ public interface GuiConstants {
 	public static final String TODAY = "heute";
 	
     // Dimensions for UI components
-    public static final Dimension TABS_LABEL_SIZE = new Dimension(150, 25);
-    public static final Dimension CHECKBOX_SIZE = new Dimension(40, 40);
-    public static final Dimension LABEL_SIZE = new Dimension(100, 20);
-    public static final Dimension WEST_PANEL_DIMENSIONS = new Dimension(730, 800);
-    public static final Dimension COMBO_BOX = new Dimension(100, 40);
+    public static final Dimension TABS_LABEL_SIZE = new Dimension(150, 30);
+    public static final Dimension CHECKBOX_SIZE = new Dimension(40, 30);
+    public static final Dimension LABEL_SIZE = new Dimension(150, 30);
+    public static final Dimension WEST_PANEL_DIMENSIONS = new Dimension(600, 800);
+    public static final Dimension COMBO_BOX_SIZE = new Dimension(700, 30);
+    public static final Dimension COMBO_BOX_SIZE_STATISTICS = new Dimension(300, 35);
+    public static final Dimension LIST_PANE_SIZE = new Dimension(600, 300);
+    public static final Dimension TEXT_AREA_SIZE = new Dimension(300, 220);
 
     // Borders and spacing for layout purposes
     public static final Border DISTANCE_BETWEEN_LABEL_TABS = BorderFactory.createEmptyBorder(10, 10, 10, 10);
     public static final Border DISTANCE_BETWEEN_ELEMENTS = BorderFactory.createEmptyBorder(0, 0, 10, 0);
     public static final Border OUTSIDE_BORDERS_FOR_SUBPANELS = BorderFactory.createEmptyBorder(15, 20, 0, 20);
     public static final int DISTANCE_BETWEEN_RADIO_BUTTONS = 50;
-
+    private static Color getRandomColor() {
+    	Random r = new Random();
+    	return new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+    }
 }

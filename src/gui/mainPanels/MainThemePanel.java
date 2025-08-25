@@ -167,7 +167,6 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
         
         if (selectedItem != null) {
             selectedThemeId = selectedItem.getId();
-            System.out.println(selectedItem +" id: " + selectedThemeId);
             ThemeDTO selectedTheme = getThemeById(selectedThemeId);
             if (selectedTheme != null) {
                 titleLabel.setText(LABEL_THEME_INFORMATION);
@@ -197,7 +196,7 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
     /** Saves a newly created theme or updates the selected one. */
     private void saveTheme() {
         String title = labelFieldPanel.getText().trim();
-        String info = labelTextPanel.getTextInfo().trim();
+        String info = labelTextPanel.getText().trim();
         if (title.isEmpty() || info.isEmpty()) {
             showMessage(WARNING_EMPTY_TITLE_INFO);
             return;
@@ -214,15 +213,14 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
             theme.setText(info);
             dbManager.saveTheme(theme);
             sManager.saveTheme(theme);
-            selectedThemeId = theme.getId(); // Select the new theme after saving
+            selectedThemeId = theme.getId();
             showMessage(ErrorHandler.getInstance().getInfo());
         } else {
             ThemeDTO selectedTheme = getThemeById(selectedThemeId);
             if (selectedTheme != null) {
                 selectedTheme.setTitle(title);
                 selectedTheme.setText(info);
-                String result = dbManager.saveTheme(selectedTheme);
-                System.out.println(result);
+                dbManager.saveTheme(selectedTheme);
                 showMessage(THEME_SUCCESFULLY_UPDATED);
             }
         }
@@ -302,6 +300,6 @@ public class MainThemePanel extends SubPanel implements GuiConstants {
 
     /** Displays a message in the bottom message area. */
     private void showMessage(String message) {
-        bottomPanel.getMessagePanel().setMessageAreaText(message);
+        bottomPanel.getMessagePanel().setMessage(message);
     }
 }
