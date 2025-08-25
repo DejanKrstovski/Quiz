@@ -1,6 +1,6 @@
 package gui.swing;
 
-import static gui.GuiConstants.COLOR_RANDOM;
+import static gui.GuiConstants.DEFAULT_BUTTON_BACKGROUND_COLOR;
 import static gui.GuiConstants.DEFAULT_CURSOR;
 
 import javax.swing.JButton;
@@ -42,7 +42,7 @@ public class MyButton extends JButton {
      * </p>
      */
     protected void applyDefaultStyling() {
-        setBackground(COLOR_RANDOM);
+        setBackground(DEFAULT_BUTTON_BACKGROUND_COLOR);
         setCursor(DEFAULT_CURSOR);
     }
 }

@@ -179,7 +179,7 @@ public class DBManager {
 		refreshQuestions();
 		refreshAnswers();
 		
-		return "QUESTION_SAVED";
+		return "Success";
 	}
 
 	public String deleteQuestion(QuestionDTO question) {
@@ -234,5 +234,4 @@ public class DBManager {
 	        } catch (SQLException ignore) {}
 	    }
 	}
-
 }

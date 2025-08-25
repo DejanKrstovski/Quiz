@@ -16,7 +16,6 @@ import bussinesLogic.QuestionDTO;
 import bussinesLogic.ThemeDTO;
 import bussinesLogic.Validator;
 import bussinesLogic.datenBank.QuizDBDataManager;
-import bussinesLogic.serialization.QuizSManager;
 import gui.GuiConstants;
 import gui.panels.AnswerPanel;
 import gui.panels.ComboBoxJListPanel;
@@ -59,7 +58,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	
 	/** Access point for quiz themes and questions. */
 	private final QuizDBDataManager dataManager = QuizDBDataManager.getInstance();
-	private final QuizSManager sManager = QuizSManager.getInstance();
+//	private final QuizSManager sManager = QuizSManager.getInstance();
 	private final ErrorHandler errorHandler = ErrorHandler.getInstance();
 	private MyButton buttonShow;
 	private SubPanel centerPanel;
@@ -258,6 +257,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 			if (selectedTheme != null) {
 				selectedThemeInfo = selectedTheme.getText();
 				buttonShow.setVisible(true);
+				buttonShow.setText(SHOW_THEME);
 				updateQuestionsList();
 				themePanel.setText(selectedTheme.getTitle());
 			} else {
@@ -322,15 +322,16 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 //		for(AnswerDTO answer : question.getAnswers()) {
 //			sManager.saveAnswer(answer);
 //		}
+//		sManager.saveQuestion(question);
+		System.out.println(question.getAnswers());
 		final String result = dataManager.saveQuestion(question);
-		sManager.saveQuestion(question);
 		allQuestions = dataManager.getAllQuestions();
 		questionItems = dataManager.getQuestionsFor(theme).stream()
 		        .map(q -> new QuestionListItem(q.getId(), q.getTitle()))
 		        .collect(Collectors.toList());
 		comboPanel.updateQuestions(questionItems);
 		notifyQuestionsChanged();
-		if (QUESTION_SAVED.equals(result)) {
+		if (SUCCESS.equals(result)) {
 			showMessage(QUESTION_SAVED);
 			updateQuestionsList();
 		} else {
@@ -364,6 +365,7 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 	/** Clears all input fields and resets selection state. */
 	private void clearAllFields() {
 		currentQuestionId = NO_SELECTION;
+		themePanel.setText(EMPTY_STRING);
 		titlePanel.setText(EMPTY_STRING);
 		questionPanel.setQuestionText(EMPTY_STRING);
 		for (int i = 0; i < MAX_ANSWERS; i++) {
@@ -389,7 +391,8 @@ public class MainQuestionPanel extends SubPanel implements ThemeChangeListener, 
 				notifyQuestionsChanged();
 				updateQuestionsList();
 				clearAllFields();
-				showMessage(msg);
+				if(SUCCESS.equals(msg))
+					showMessage(QUESTION_DELETED);
 			} else {
 				showMessage(QUESTION_DELETING_NOT_POSSIBLE);
 			}

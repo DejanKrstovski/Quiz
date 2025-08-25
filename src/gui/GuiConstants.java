@@ -63,10 +63,11 @@ public interface GuiConstants {
     public static final int MAX_ANSWERS = 4;
     public static final int MAX_ROW_COUNT = 10;
     public static final int ROW_HEIGHT = 30;
-    public static final Color COLOR_PRIMARY = new Color(0, 153, 0); 
-    public static final Color COLOR_SECONDARY = new Color(0, 102, 204);
+    public static final Color COLOR_TABS = Color.CYAN; 
     public static final Color COLOR_RANDOM = getRandomColor();    
     public static final Color COLOR_TABLE_HEADER = new Color(230, 230, 230);
+    public static final Color DEFAULT_BUTTON_BACKGROUND_COLOR = Color.GREEN;
+    
     // Button labels and menu texts
     public static final String ALL_THEMES = "Alle Themen";
     public static final String SAVE_THEME = "Speichern";
@@ -132,14 +133,20 @@ public interface GuiConstants {
     public static final String QUESTION_DELETING_NOT_POSSIBLE = "Die Frage konnte nicht gelöscht werden.";
     public static final String QUESTION_DELETE_INFORMATION = "Möchten Sie diese Frage wirklich löschen?";
     public static final String QUESTION_SAVED = "Frage erfolgreich gespeichert.";
-    public static final String QUESTION_DELETED = "Frage gelöscht";
+    public static final String SUCCESS = "Success";
+    public static final String QUESTION_DELETED = "Die Frage wurde erfolgreich gelöscht";
     public static final String ERROR_LOAD_QUESTION = "Ausgewählte Frage konnte nicht geladen werden.";
     public static final String ERROR_NO_QUESTIONS_FOR_THEME = "Keine Fragen für das Thema vorhanden.";
     public static final String CHOOSE_AN_ANSWER = "Bitte eine Antwort auswählen!";
     public static final String CORRECT_ANSWER = "Korrekt! Alle Antworten sind selektiert.";
     public static final String ANSWER_SAVED = "Antwort gespeichert";
     public static final String STATISTICS_DELETED = "Statistiken wurden gelöscht.";
+    public static final String STATISTICS_NOT_DELETED = "Statistikdaten konnten nicht gelöscht werden.";
+    public static final String STATISTICS_REALLY_DELETE = "Möchtest du wirklich alle Statistiken (Antworten) dauerhaft löschen?";
     public static final String ERROR_MISSING_ID = "Interner Fehler: fehlende Answer-ID.";
+    public static final String NO_QUESTIONS_IN_DB = "Keine Fragen in der Datenbank.";
+    public static final String QUESTION_DISABLED = "Die Frage kann nicht mehr beantwortet werden";
+    public static final String DATA_RELOADED = "Statistik aktualisiert";
     
     // Fonts for different components
     public static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 20);
@@ -148,7 +155,6 @@ public interface GuiConstants {
     public static final Font FONT_TABLES = new Font("Times New Roman", Font.BOLD, 14);
     public static final Font FONT_TEXT = new Font("Arial", Font.ITALIC, 16);
 
-    public static final Color DEFAULT_BUTTON_BACKGROUND_COLOR = Color.GREEN;
     public static final Cursor DEFAULT_CURSOR = new Cursor(Cursor.HAND_CURSOR);
     
     // RadioButtons

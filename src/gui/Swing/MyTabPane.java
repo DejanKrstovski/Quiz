@@ -3,7 +3,7 @@ package gui.swing;
 import static gui.GuiConstants.DISTANCE_BETWEEN_LABEL_TABS;
 import static gui.GuiConstants.FONT_TABS;
 import static gui.GuiConstants.TABS_LABEL_SIZE;
-import static gui.GuiConstants.COLOR_RANDOM;
+import static gui.GuiConstants.COLOR_TABS;
 import javax.swing.JTabbedPane;
 
 /**
@@ -69,7 +69,7 @@ public class MyTabPane extends JTabbedPane {
         tabLabel.setHorizontalAlignment(MyLabel.CENTER);
         tabLabel.setVerticalAlignment(MyLabel.CENTER);
         tabLabel.setOpaque(true);
-        tabLabel.setBackground(COLOR_RANDOM);
+        tabLabel.setBackground(COLOR_TABS);
         tabLabel.setBorder(DISTANCE_BETWEEN_LABEL_TABS);
         setTabComponentAt(tabIndex, tabLabel);
     }

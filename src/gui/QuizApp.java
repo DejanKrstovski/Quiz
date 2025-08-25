@@ -98,7 +98,7 @@ public class QuizApp extends JFrame implements GuiConstants {
 		themePanel.addOnThemeChangeListener(playPanel);
 		themePanel.addOnThemeChangeListener(statisticPanel);
 		questionPanel.addOnQuestionsChangeListener(playPanel);
-		questionPanel.addOnQuestionsChangeListener(statisticPanel);
+//		questionPanel.addOnQuestionsChangeListener(statisticPanel);
 		
 		add(tabPane);
 	}

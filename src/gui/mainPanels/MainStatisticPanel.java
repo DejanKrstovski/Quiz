@@ -292,19 +292,20 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
             questionsForTheme = dataManager.getQuestionsFor(selectedTheme);
             updateQuestionsTable();
         }
+        showMessage(DATA_RELOADED);
     }
 
     private void deleteStatistics() {
         int option = JOptionPane.showConfirmDialog(
                 this,
-                "Möchtest du wirklich alle Statistiken (Antworten) dauerhaft löschen?",
-                "Bestätigen",
+                STATISTICS_REALLY_DELETE,
+                DELETE_CONFIRMATION,
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );
         if (option != JOptionPane.YES_OPTION) return;
 
-        dataManager.deleteAllPlayerAnswers();
+        String result = dataManager.deleteAllPlayerAnswers();
         allPlayerAnswers = new ArrayList<>();
         answersByQuestion.clear();
         updateStatisticsUI();
@@ -312,7 +313,10 @@ public class MainStatisticPanel extends SubPanel implements QuestionsChangeListe
             questionsForTheme = dataManager.getQuestionsFor(selectedTheme);
         }
         updateQuestionsTable();
-        showMessage(STATISTICS_DELETED);
+        if(SUCCESS.equals(result))
+			showMessage(STATISTICS_DELETED);
+		else
+			showMessage(STATISTICS_NOT_DELETED + " " + result);
     }
 
     private void refreshThemesFromData() {
